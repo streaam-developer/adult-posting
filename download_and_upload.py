@@ -7,6 +7,7 @@ import re
 import time
 
 import cloudscraper
+from motor.motor_asyncio import AsyncIOMotorClient
 from telegram import Bot, Update
 from telegram.error import BadRequest, NetworkError, RetryAfter, TimedOut
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
