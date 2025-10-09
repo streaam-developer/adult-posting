@@ -1,7 +1,12 @@
 # Word replacements for description (case-insensitive)
 REPLACEMENTS = {
     "hotel": "oyo",
-    "Lund": "namoona"
+    "Lund": "namoona",
+    "chut": "cheew",
+    "bhosdi": "bhenchod",
+    "bhosdiwala": "bhenchodwala",
+    "bhosdika": "bhenchodka",
+    "nangi": "nangi",
 }
 
 ADMIN_ID = 6924888856  # Replace with your Telegram user ID
@@ -10,7 +15,7 @@ ADMIN_ID = 6924888856  # Replace with your Telegram user ID
 USERNAMES = ['boltarhegabot', 'dcsdfvavbdfbot']  # Add multiple usernames here
 
 # Channels to forward the link message to
-FORWARD_CHANNELS = [-1002706635277]  # Add channel IDs here, e.g., [-1001234567890]
+FORWARD_CHANNELS = [-1002981998032]  # Add channel IDs here, e.g., [-1001234567890]
 
 # MongoDB configuration
 MONGO_URI = 'mongodb+srv://sonukumarkrbbu60:lfkTvljnt25ehTt9@cluster0.2wrbftx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'  # Replace with your MongoDB URI

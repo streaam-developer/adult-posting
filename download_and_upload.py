@@ -61,7 +61,7 @@ def apply_replacements(text, replacements):
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
 CHANNEL_ID = -1002818242381
-FILE_STORE_CHANNEL = [CHANNEL_ID]
+FILE_STORE_CHANNEL = [-1002747781375]
 
 # MongoDB connection
 mongo_client = AsyncIOMotorClient(MONGO_URI)
@@ -195,24 +195,23 @@ async def process_url(post_url):
             await status_msg.edit_text("✅ **Download complete!** Uploading…")
 
             # ---------- Upload ----------
-            if modified:
-                video_msg = await upload_with_retry(bot, filename, title, description, duration)
-                if video_msg:
-                    msg_id = video_msg.message_id
-                    base64_string = await encode(f"get-{msg_id * abs(FILE_STORE_CHANNEL[0])}")
-                    bot_username = random.choice(USERNAMES)
-                    link = f"https://t.me/{bot_username}?start={base64_string}"
-                    link_msg = await bot.send_message(chat_id=CHANNEL_ID, text=f"🎬 **{title}**\n📝 {description}\n⏱️ Duration: {readable_duration}\nclick below link for file🔗 {link}")
-                    # Forward the message to forward channels
-                    for forward_channel in FORWARD_CHANNELS:
-                        await bot.forward_message(chat_id=forward_channel, from_chat_id=CHANNEL_ID, message_id=link_msg.message_id)
-                    # Mark as processed in DB
-                    await collection.insert_one({'url': post_url, 'processed_at': time.time()})
-                    # Update last post time
-                    await collection.update_one({'type': 'last_post'}, {'$set': {'timestamp': time.time()}}, upsert=True)
+            video_msg = await upload_with_retry(bot, filename, title, description, duration)
+            if video_msg:
+                msg_id = video_msg.message_id
+                base64_string = await encode(f"get-{msg_id * abs(FILE_STORE_CHANNEL[0])}")
+                bot_username = random.choice(USERNAMES)
+                link = f"https://t.me/{bot_username}?start={base64_string}"
+                link_msg = await bot.send_message(chat_id=CHANNEL_ID, text=f"🎬 **{title}**\n\n📝 {description}\n\n⏱️ Duration: {readable_duration}\n\nclick below link for file🔗 {link}")
+                # Forward the message to forward channels
+                for forward_channel in FORWARD_CHANNELS:
+                    await bot.forward_message(chat_id=forward_channel, from_chat_id=CHANNEL_ID, message_id=link_msg.message_id)
+                # Mark as processed in DB
+                await collection.insert_one({'url': post_url, 'processed_at': time.time()})
+                # Update last post time
+                await collection.update_one({'type': 'last_post'}, {'$set': {'timestamp': time.time()}}, upsert=True)
             else:
-                print("No replacements applied, skipping upload.")
-                await status_msg.edit_text("❌ No replacements applied, skipping upload.")
+                print("Upload failed.")
+                await status_msg.edit_text("❌ Upload failed.")
 
         if os.path.exists(filename):
             os.remove(filename)
@@ -242,8 +241,8 @@ async def automated_posting():
                 print("No previous posts found.")
             print(f"Auto-processing: {post_url}")
             await process_url(post_url)
-            # Sleep for 30-40 seconds (for testing)
-            sleep_time = random.randint(30, 40)
+            # Sleep for 1-1.5 hours
+            sleep_time = random.randint(3600, 5400)
             print(f"Sleeping for {sleep_time} seconds")
             await asyncio.sleep(sleep_time)
         except Exception as e:
