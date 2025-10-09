@@ -1,7 +1,6 @@
 import subprocess
 import os
 import re
-import requests
 from telegram import Bot
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
@@ -10,16 +9,16 @@ CHANNEL_ID = '-1002706635277'
 post_url = 'https://viralkand.com/hotel-room-mein-gf-ne-lund-choos-ke-pani-nikaal-diya/'
 
 try:
-    print(f"Fetching page content from {post_url}")
-    # Fetch the HTML content of the page
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-    response = requests.get(post_url, headers=headers)
-    response.raise_for_status() # Raise an exception for bad status codes
+    print(f"Fetching page content from {post_url} using yt-dlp to bypass protection.")
+    # Use yt-dlp to get the HTML content of the page, bypassing Cloudflare
+    process = subprocess.run(
+        ['yt-dlp', post_url, '--extractor-args', 'generic:impersonate', '--print-page'],
+        capture_output=True, text=True, check=True, encoding='utf-8'
+    )
+    html_content = process.stdout
 
     # Search for the video URL in the HTML content
-    match = re.search(r'(https?://vk[^\s"]+\.mp4)', response.text)
+    match = re.search(r'(https?://vk[^\s"]+\.mp4)', html_content)
     if not match:
         print("Could not find video URL in the page source.")
         exit(1)
@@ -28,7 +27,7 @@ try:
     print(f"Found video URL: {video_url}")
 
     print(f"Downloading video from {video_url}")
-    # Download using yt-dlp
+    # Download using yt-dlp. No need for impersonate on the direct .mp4 link.
     result = subprocess.run(['yt-dlp', video_url, '-o', 'temp_video.mp4'], capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Failed to download: {result.stderr}")
@@ -42,5 +41,7 @@ try:
     print("Uploaded successfully")
     os.remove('temp_video.mp4')
 
+except subprocess.CalledProcessError as e:
+    print(f"Error fetching page with yt-dlp: {e.stderr}")
 except Exception as e:
-    print(f"Error: {e}")
+    print(f"An unexpected error occurred: {e}")
