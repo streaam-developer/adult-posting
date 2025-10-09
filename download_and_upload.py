@@ -202,18 +202,11 @@ async def main():
 
 def run_bot():
     try:
-        asyncio.run(main())
-    except RuntimeError as e:
-        if "already running" in str(e):
-            # If loop is already running, use nest_asyncio if available, else warn
-            try:
-                import nest_asyncio
-                nest_asyncio.apply()
-                asyncio.run(main())
-            except ImportError:
-                print("Event loop already running. Please run in a fresh terminal or install nest_asyncio.")
-        else:
-            raise
+        import nest_asyncio
+        nest_asyncio.apply()
+    except ImportError:
+        pass
+    asyncio.run(main())
 
 
 if __name__ == "__main__":
