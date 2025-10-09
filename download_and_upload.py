@@ -2,6 +2,7 @@ import os
 import re
 import cloudscraper
 from telegram import Bot
+from telegram.request import Request
 import asyncio
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
@@ -33,9 +34,11 @@ async def main():
                     f.write(chunk)
 
         print("Download complete. Uploading to Telegram...")
-        bot = Bot(token=BOT_TOKEN)
+        # Configure custom timeouts for the bot
+        request = Request(connect_timeout=10.0, read_timeout=600.0)
+        bot = Bot(token=BOT_TOKEN, request=request)
         with open('temp_video.mp4', 'rb') as f:
-            await bot.send_video(chat_id=CHANNEL_ID, video=f, caption=f"Video from {post_url}", timeout=600)
+            await bot.send_video(chat_id=CHANNEL_ID, video=f, caption=f"Video from {post_url}")
 
         print("Uploaded successfully")
         os.remove('temp_video.mp4')
