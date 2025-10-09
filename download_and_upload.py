@@ -3,16 +3,16 @@ import re
 import asyncio
 import cloudscraper
 from telegram import Bot
-from telegram.request import Request
+from config import POST_URL
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
 CHANNEL_ID = -1002706635277
-post_url = 'https://viralkand.com/hotel-room-mein-gf-ne-lund-choos-ke-pani-nikaal-diya/'
+post_url = POST_URL
 
 
 async def main():
     try:
-        print(f"Fetching page content from {post_url} using cloudscraper.")
+        print(f"Fetching page content from {post_url} using cloudscraper...")
         scraper = cloudscraper.create_scraper()
         response = scraper.get(post_url)
         response.raise_for_status()
@@ -28,7 +28,7 @@ async def main():
         print(f"Found video URL: {video_url}")
 
         # Download video
-        print(f"Downloading video from {video_url}")
+        print(f"Downloading video from {video_url} ...")
         with scraper.get(video_url, stream=True) as r:
             r.raise_for_status()
             with open('temp_video.mp4', 'wb') as f:
@@ -37,19 +37,21 @@ async def main():
 
         print("Download complete. Uploading to Telegram...")
 
-        # Telegram upload
-        req = Request(connect_timeout=10.0, read_timeout=600.0)
-        bot = Bot(token=BOT_TOKEN, request=req)
-
+        # Upload video to Telegram
+        bot = Bot(token=BOT_TOKEN)
         async with bot:
             with open('temp_video.mp4', 'rb') as f:
-                await bot.send_video(chat_id=CHANNEL_ID, video=f, caption=f"Video from {post_url}")
+                await bot.send_video(
+                    chat_id=CHANNEL_ID,
+                    video=f,
+                    caption=f"Video from {post_url}",
+                )
 
-        print("Uploaded successfully")
+        print("✅ Uploaded successfully")
         os.remove('temp_video.mp4')
 
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"❌ An unexpected error occurred: {e}")
 
 
 if __name__ == "__main__":
