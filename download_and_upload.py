@@ -81,6 +81,7 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
         )
     except BadRequest as e:
         print(f"❌ Chat not found: channel_id={FILE_STORE_CHANNEL}, operation=send_upload_start_message, error={e}")
+        return None
 
     for attempt in range(1, retries + 1):
         try:
