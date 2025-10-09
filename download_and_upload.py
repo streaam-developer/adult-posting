@@ -48,7 +48,7 @@ def apply_replacements(text, replacements):
     return text, modified
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
-CHANNEL_ID = -1002706635277
+CHANNEL_ID = -1002818242381
 FILE_STORE_CHANNEL = [CHANNEL_ID]
 BOT_USERNAMES = ['boltarhegabot']  # Replace with actual bot username(s)
 
