@@ -2,6 +2,7 @@ import os
 import re
 import asyncio
 import cloudscraper
+import time
 import math
 from telegram import Bot
 from telegram.error import TimedOut, RetryAfter, NetworkError, BadRequest
@@ -13,109 +14,112 @@ post_url = POST_URL
 
 
 async def upload_with_retry(bot, file_path, caption, retries=3):
-    """Upload video with retry + Telegram message updates."""
+    """Upload video with retry + stats."""
     file_size = os.path.getsize(file_path)
     size_mb = file_size / (1024 * 1024)
-    start_msg = await bot.send_message(
+    msg = await bot.send_message(
         chat_id=CHANNEL_ID,
-        text=f"📤 **Starting upload...**\n🎬 *{caption}*\n📦 Size: `{size_mb:.2f} MB`"
+        text=f"📤 **Starting upload...**\n🎬 *{caption}*\n📦 `{size_mb:.2f} MB`"
     )
 
     for attempt in range(1, retries + 1):
         try:
-            print(f"📤 Attempt {attempt}: Uploading video ({size_mb:.2f} MB)...")
-            with open(file_path, 'rb') as f:
+            print(f"📤 Attempt {attempt}: uploading {size_mb:.2f} MB…")
+            start = time.time()
+            with open(file_path, "rb") as f:
                 await bot.send_video(
                     chat_id=CHANNEL_ID,
                     video=f,
                     caption=f"Video from {caption}",
-                    read_timeout=1200,  # 20 min
-                    write_timeout=1200,
-                    connect_timeout=30,
+                    read_timeout=1800,   # 30 min
+                    write_timeout=1800,
+                    connect_timeout=60,
                 )
-            await start_msg.edit_text(
-                f"✅ **Upload complete!**\n📦 Size: `{size_mb:.2f} MB`\n🔁 Attempts: {attempt}"
+            speed = size_mb / (time.time() - start + 0.01)
+            await msg.edit_text(
+                f"✅ **Upload complete!**\n📦 `{size_mb:.2f} MB`\n⚡ Speed ≈ {speed:.2f} MB/s\n🔁 Attempts: {attempt}"
             )
             return
         except RetryAfter as e:
             wait = math.ceil(e.retry_after) + 5
-            print(f"⚠️ Rate limited — waiting {wait}s before retry...")
-            await start_msg.edit_text(f"⏳ Rate limited, retrying in {wait}s...")
+            print(f"⚠️ Flood control — waiting {wait}s")
+            await msg.edit_text(f"⏳ Flood control, retrying in {wait}s…")
             await asyncio.sleep(wait)
         except (TimedOut, NetworkError) as e:
-            print(f"⚠️ Network/timeout error: {e}. Retrying in 10s...")
-            await start_msg.edit_text(
-                f"⚠️ Network/timeout error (attempt {attempt}) — retrying..."
-            )
+            print(f"⚠️ Timeout/network error: {e}")
+            await msg.edit_text(f"⚠️ Timeout/network error (attempt {attempt}) — retrying…")
             await asyncio.sleep(10)
         except Exception as e:
-            await start_msg.edit_text(f"❌ Upload failed: {e}")
+            await msg.edit_text(f"❌ Upload failed: {e}")
             print(f"❌ Upload failed: {e}")
             break
 
-    await start_msg.edit_text("❌ Upload failed after multiple attempts.")
+    await msg.edit_text("❌ Upload failed after multiple retries.")
 
 
 async def main():
     try:
-        print(f"Fetching page content from {post_url} using cloudscraper...")
+        print(f"Fetching page content from {post_url}")
         scraper = cloudscraper.create_scraper()
-        response = scraper.get(post_url)
-        response.raise_for_status()
-        html_content = response.text
+        html = scraper.get(post_url).text
 
-        match = re.search(r'(https?://vk[^\s"]+\.mp4)', html_content)
+        match = re.search(r"(https?://vk[^\s\"]+\.mp4)", html)
         if not match:
-            print("Could not find video URL in the page source.")
+            print("No video found.")
             return
 
         video_url = match.group(1)
         print(f"Found video URL: {video_url}")
-        print(f"Downloading video from {video_url} ...")
 
         bot = Bot(token=BOT_TOKEN)
         async with bot:
             status_msg = await bot.send_message(
                 chat_id=CHANNEL_ID,
-                text=f"⬇️ **Downloading video...**\n{post_url}"
+                text=f"⬇️ **Downloading video…**\n{post_url}"
             )
 
+            # ---------- Download ----------
             with scraper.get(video_url, stream=True) as r:
                 r.raise_for_status()
                 total = int(r.headers.get("content-length", 0))
                 downloaded = 0
-                last_percent = 0  # 🟢 Prevent duplicate updates
-                chunk_size = 8192
+                chunk_size = 256 * 1024  # 256 KB chunks for faster I/O
+                start_time = time.time()
+                last_update = 0
 
                 with open("temp_video.mp4", "wb") as f:
                     for chunk in r.iter_content(chunk_size=chunk_size):
-                        if chunk:
-                            f.write(chunk)
-                            downloaded += len(chunk)
-                            if total > 0:
-                                progress = (downloaded / total) * 100
-                                # Update every 2% change only
-                                if progress - last_percent >= 2:
-                                    try:
-                                        await status_msg.edit_text(
-                                            f"⬇️ **Downloading...** {progress:.1f}%\n"
-                                            f"📥 Size: {downloaded / (1024 * 1024):.2f} MB"
-                                        )
-                                        last_percent = progress
-                                    except BadRequest as e:
-                                        if "Message is not modified" not in str(e):
-                                            print(f"⚠️ Telegram edit error: {e}")
+                        if not chunk:
+                            continue
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        now = time.time()
+                        # Update every 2 seconds only
+                        if now - last_update >= 2:
+                            elapsed = now - start_time
+                            speed = downloaded / 1024 / 1024 / elapsed if elapsed > 0 else 0
+                            percent = (downloaded / total * 100) if total else 0
+                            try:
+                                await status_msg.edit_text(
+                                    f"⬇️ **Downloading…** {percent:.1f}%\n"
+                                    f"📥 {downloaded/(1024*1024):.2f}/{total/(1024*1024):.2f} MB\n"
+                                    f"⚡ Speed: {speed:.2f} MB/s"
+                                )
+                            except BadRequest as e:
+                                if "Message is not modified" not in str(e):
+                                    print(f"Edit error: {e}")
+                            last_update = now
 
-            await status_msg.edit_text("✅ **Download complete!** Uploading...")
+            await status_msg.edit_text("✅ **Download complete!** Uploading…")
 
-            # Upload
+            # ---------- Upload ----------
             await upload_with_retry(bot, "temp_video.mp4", post_url)
 
         if os.path.exists("temp_video.mp4"):
             os.remove("temp_video.mp4")
 
     except Exception as e:
-        print(f"❌ An unexpected error occurred: {e}")
+        print(f"❌ Unexpected error: {e}")
 
 
 if __name__ == "__main__":
