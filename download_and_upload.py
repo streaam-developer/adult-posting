@@ -75,7 +75,7 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
     size_mb = file_size / (1024 * 1024)
     readable_duration = parse_duration(duration)
     msg = await bot.send_message(
-        chat_id=CHANNEL_ID,
+        chat_id=FILE_STORE_CHANNEL,
         text=f"📤 **Starting upload...**\n🎬 *{title}*\n📦 `{size_mb:.2f} MB`"
     )
 
@@ -85,7 +85,7 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
             start = time.time()
             with open(file_path, "rb") as f:
                 video_msg = await bot.send_video(
-                    chat_id=CHANNEL_ID,
+                    chat_id=FILE_STORE_CHANNEL,
                     video=f,
                     caption=f"🎬 **{title}**\n\n📝 {description}\n\n⏱️ Duration: {readable_duration}",
                     read_timeout=1800,   # 30 min
