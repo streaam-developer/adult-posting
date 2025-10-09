@@ -35,7 +35,7 @@ async def main():
         print("Download complete. Uploading to Telegram...")
         bot = Bot(token=BOT_TOKEN)
         with open('temp_video.mp4', 'rb') as f:
-            await bot.send_video(chat_id=CHANNEL_ID, video=f, caption=f"Video from {post_url}")
+            await bot.send_video(chat_id=CHANNEL_ID, video=f, caption=f"Video from {post_url}", timeout=600)
 
         print("Uploaded successfully")
         os.remove('temp_video.mp4')
