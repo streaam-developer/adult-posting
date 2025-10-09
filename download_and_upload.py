@@ -244,7 +244,7 @@ async def automated_posting():
             await process_url(post_url)
             # Sleep for 1-1.5 hours
          #   sleep_time = random.randint(3600, 4500)
-            sleep_time = random.randint(3600, 5400)
+            sleep_time = random.randint(600, 900)
             print(f"Sleeping for {sleep_time} seconds")
             await asyncio.sleep(sleep_time)
         except Exception as e:
