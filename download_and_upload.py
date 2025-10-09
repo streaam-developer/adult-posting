@@ -60,8 +60,8 @@ def apply_replacements(text, replacements):
     return text, modified
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
-CHANNEL_ID = -1002818242381
-FILE_STORE_CHANNEL = [-1002747781375]
+FILE_STORE_CHANNEL = -1002818242381
+CHANNEL_ID = [-1002747781375]
 
 # MongoDB connection
 mongo_client = AsyncIOMotorClient(MONGO_URI)
