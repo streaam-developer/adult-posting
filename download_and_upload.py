@@ -6,7 +6,7 @@ import time
 import math
 from telegram import Bot
 from telegram.error import TimedOut, RetryAfter, NetworkError, BadRequest
-from config import POST_URL
+from config import POST_URL, REPLACEMENTS
 
 def parse_duration(iso_duration):
     """Parse ISO 8601 duration to HH:MM:SS format."""
@@ -17,6 +17,21 @@ def parse_duration(iso_duration):
         seconds = int(match.group(3) or 0)
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
     return iso_duration
+
+def sanitize_filename(name):
+    """Sanitize string for use as filename."""
+    return re.sub(r'[<>:"/\\|?*]', '', name).strip()
+
+def apply_replacements(text, replacements):
+    """Apply case-insensitive word replacements to text. Returns modified text and if any replacement was made."""
+    modified = False
+    for old, new in replacements.items():
+        # Use word boundaries to replace whole words
+        pattern = r'\b' + re.escape(old) + r'\b'
+        if re.search(pattern, text, re.IGNORECASE):
+            text = re.sub(pattern, new, text, flags=re.IGNORECASE)
+            modified = True
+    return text, modified
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
 CHANNEL_ID = -1002706635277
@@ -84,15 +99,22 @@ async def main():
         dur_match = re.search(r'<meta itemprop="duration" content="([^"]*)"', html)
         duration = dur_match.group(1) if dur_match else "Unknown"
 
+        # Apply replacements to description
+        description, modified = apply_replacements(description, REPLACEMENTS)
+        if not modified:
+            print("No replacements applied, skipping upload.")
+            return
+
         match = re.search(r"(https?://vk[^\s\"]+\.mp4)", html)
         if not match:
             print("No video found.")
             return
 
         video_url = match.group(1)
+        readable_duration = parse_duration(duration)
         print(f"Found video URL: {video_url}")
         print(f"Title: {title}")
-        print(f"Duration: {duration}")
+        print(f"Duration: {readable_duration}")
 
         bot = Bot(token=BOT_TOKEN)
         async with bot:
@@ -110,7 +132,8 @@ async def main():
                 start_time = time.time()
                 last_update = 0
 
-                with open("temp_video.mp4", "wb") as f:
+                filename = sanitize_filename(title) + ".mp4"
+                with open(filename, "wb") as f:
                     for chunk in r.iter_content(chunk_size=chunk_size):
                         if not chunk:
                             continue
@@ -136,10 +159,10 @@ async def main():
             await status_msg.edit_text("✅ **Download complete!** Uploading…")
 
             # ---------- Upload ----------
-            await upload_with_retry(bot, "temp_video.mp4", title, description, duration)
+            await upload_with_retry(bot, filename, title, description, duration)
 
-        if os.path.exists("temp_video.mp4"):
-            os.remove("temp_video.mp4")
+        if os.path.exists(filename):
+            os.remove(filename)
 
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
