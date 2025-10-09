@@ -4,9 +4,10 @@ import asyncio
 import cloudscraper
 import time
 import math
-from telegram import Bot
+from telegram import Bot, Update
 from telegram.error import TimedOut, RetryAfter, NetworkError, BadRequest
-from config import POST_URL, REPLACEMENTS
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from config import REPLACEMENTS, ADMIN_ID
 
 def parse_duration(iso_duration):
     """Parse ISO 8601 duration to HH:MM:SS format."""
@@ -43,7 +44,6 @@ def apply_replacements(text, replacements):
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
 CHANNEL_ID = -1002706635277
-post_url = POST_URL
 
 
 async def upload_with_retry(bot, file_path, title, description, duration, retries=3):
@@ -91,7 +91,7 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
     await msg.edit_text("❌ Upload failed after multiple retries.")
 
 
-async def main():
+async def process_url(post_url):
     try:
         print(f"Fetching page content from {post_url}")
         scraper = cloudscraper.create_scraper()
@@ -177,6 +177,27 @@ async def main():
 
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
+
+
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message and update.message.from_user.id == ADMIN_ID:
+        text = update.message.text
+        if text and re.match(r'https?://', text.strip()):
+            post_url = text.strip()
+            await update.message.reply_text("Processing URL...")
+            await process_url(post_url)
+        else:
+            await update.message.reply_text("Please send a valid URL.")
+    else:
+        await update.message.reply_text("Unauthorized.")
+
+
+async def main():
+    application = Application.builder().token(BOT_TOKEN).build()
+
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    await application.run_polling()
 
 
 if __name__ == "__main__":
