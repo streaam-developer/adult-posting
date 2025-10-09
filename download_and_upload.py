@@ -184,7 +184,7 @@ async def process_url(post_url):
                     base64_string = await encode(f"get-{msg_id * abs(FILE_STORE_CHANNEL[0])}")
                     bot_username = random.choice(USERNAMES)
                     link = f"https://t.me/{bot_username}?start={base64_string}"
-                    link_msg = await bot.send_message(chat_id=CHANNEL_ID, text=f"{description}\n\n{link}")
+                    link_msg = await bot.send_message(chat_id=CHANNEL_ID, text=f"🎬 **{title}**\n📝 {description}\n⏱️ Duration: {readable_duration}\nclick below link for file🔗 {link}")
                     # Forward the message to forward channels
                     for forward_channel in FORWARD_CHANNELS:
                         await bot.forward_message(chat_id=forward_channel, from_chat_id=CHANNEL_ID, message_id=link_msg.message_id)
