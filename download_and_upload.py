@@ -4,6 +4,8 @@ import asyncio
 import cloudscraper
 import time
 import math
+import base64
+import random
 from telegram import Bot, Update
 from telegram.error import TimedOut, RetryAfter, NetworkError, BadRequest
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
@@ -31,6 +33,9 @@ def sanitize_filename(name):
     """Sanitize string for use as filename."""
     return re.sub(r'[<>:"/\\|?*]', '', name).strip()
 
+async def encode(string):
+    return base64.urlsafe_b64encode(string.encode()).decode()
+
 def apply_replacements(text, replacements):
     """Apply case-insensitive word replacements to text. Returns modified text and if any replacement was made."""
     modified = False
@@ -44,6 +49,8 @@ def apply_replacements(text, replacements):
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
 CHANNEL_ID = -1002706635277
+FILE_STORE_CHANNEL = [CHANNEL_ID]
+BOT_USERNAMES = ['boltarhegabot']  # Replace with actual bot username(s)
 
 
 async def upload_with_retry(bot, file_path, title, description, duration, retries=3):
@@ -61,7 +68,7 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
             print(f"📤 Attempt {attempt}: uploading {size_mb:.2f} MB…")
             start = time.time()
             with open(file_path, "rb") as f:
-                await bot.send_video(
+                video_msg = await bot.send_video(
                     chat_id=CHANNEL_ID,
                     video=f,
                     caption=f"🎬 **{title}**\n\n📝 {description}\n\n⏱️ Duration: {readable_duration}",
@@ -73,7 +80,7 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
             await msg.edit_text(
                 f"✅ **Upload complete!**\n📦 `{size_mb:.2f} MB`\n⚡ Speed ≈ {speed:.2f} MB/s\n🔁 Attempts: {attempt}"
             )
-            return
+            return video_msg
         except RetryAfter as e:
             wait = math.ceil(e.retry_after) + 5
             print(f"⚠️ Flood control — waiting {wait}s")
@@ -89,6 +96,7 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
             break
 
     await msg.edit_text("❌ Upload failed after multiple retries.")
+    return None
 
 
 async def process_url(post_url):
@@ -167,7 +175,13 @@ async def process_url(post_url):
 
             # ---------- Upload ----------
             if modified:
-                await upload_with_retry(bot, filename, title, description, duration)
+                video_msg = await upload_with_retry(bot, filename, title, description, duration)
+                if video_msg:
+                    msg_id = video_msg.message_id
+                    base64_string = await encode(f"get-{msg_id * abs(FILE_STORE_CHANNEL[0])}")
+                    bot_username = (await bot.get_me()).username
+                    link = f"https://t.me/{bot_username}?start={base64_string}"
+                    await bot.send_message(chat_id=CHANNEL_ID, text=f"Here is your link\n\n{link}")
             else:
                 print("No replacements applied, skipping upload.")
                 await status_msg.edit_text("❌ No replacements applied, skipping upload.")
