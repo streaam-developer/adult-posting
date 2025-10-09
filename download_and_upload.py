@@ -1,14 +1,14 @@
 import os
 import re
+import asyncio
 import cloudscraper
 from telegram import Bot
-from telegram import request
-import asyncio
+from telegram.request import Request
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
-CHANNEL_ID = '-1002706635277'
-
+CHANNEL_ID = -1002706635277
 post_url = 'https://viralkand.com/hotel-room-mein-gf-ne-lund-choos-ke-pani-nikaal-diya/'
+
 
 async def main():
     try:
@@ -18,15 +18,17 @@ async def main():
         response.raise_for_status()
         html_content = response.text
 
+        # Find .mp4 link
         match = re.search(r'(https?://vk[^\s"]+\.mp4)', html_content)
         if not match:
             print("Could not find video URL in the page source.")
-            exit(1)
+            return
 
         video_url = match.group(1)
         print(f"Found video URL: {video_url}")
 
-        print(f"Downloading video from {video_url} using cloudscraper.")
+        # Download video
+        print(f"Downloading video from {video_url}")
         with scraper.get(video_url, stream=True) as r:
             r.raise_for_status()
             with open('temp_video.mp4', 'wb') as f:
@@ -34,17 +36,21 @@ async def main():
                     f.write(chunk)
 
         print("Download complete. Uploading to Telegram...")
-        # Configure custom timeouts for the bot
-        request = Request(connect_timeout=10.0, read_timeout=600.0)
-        bot = Bot(token=BOT_TOKEN, request=request)
-        with open('temp_video.mp4', 'rb') as f:
-            await bot.send_video(chat_id=CHANNEL_ID, video=f, caption=f"Video from {post_url}")
+
+        # Telegram upload
+        req = Request(connect_timeout=10.0, read_timeout=600.0)
+        bot = Bot(token=BOT_TOKEN, request=req)
+
+        async with bot:
+            with open('temp_video.mp4', 'rb') as f:
+                await bot.send_video(chat_id=CHANNEL_ID, video=f, caption=f"Video from {post_url}")
 
         print("Uploaded successfully")
         os.remove('temp_video.mp4')
 
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
