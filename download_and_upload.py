@@ -53,7 +53,11 @@ def apply_replacements(text, replacements):
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
 CHANNEL_ID = -1002818242381
 FILE_STORE_CHANNEL = [CHANNEL_ID]
-BOT_USERNAMES = ['boltarhegabot']  # Replace with actual bot username(s)
+
+# MongoDB connection
+mongo_client = MongoClient(MONGO_URI)
+db = mongo_client[DB_NAME]
+collection = db[COLLECTION_NAME]
 
 
 async def upload_with_retry(bot, file_path, title, description, duration, retries=3):
@@ -104,6 +108,11 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
 
 async def process_url(post_url):
     try:
+        # Check if URL already processed
+        if collection.find_one({'url': post_url}):
+            print(f"URL {post_url} already processed.")
+            return
+
         print(f"Fetching page content from {post_url}")
         scraper = cloudscraper.create_scraper()
         html = scraper.get(post_url).text
@@ -188,6 +197,10 @@ async def process_url(post_url):
                     # Forward the message to forward channels
                     for forward_channel in FORWARD_CHANNELS:
                         await bot.forward_message(chat_id=forward_channel, from_chat_id=CHANNEL_ID, message_id=link_msg.message_id)
+                    # Mark as processed in DB
+                    collection.insert_one({'url': post_url, 'processed_at': time.time()})
+                    # Update last post time
+                    collection.update_one({'type': 'last_post'}, {'$set': {'timestamp': time.time()}}, upsert=True)
             else:
                 print("No replacements applied, skipping upload.")
                 await status_msg.edit_text("❌ No replacements applied, skipping upload.")
@@ -198,6 +211,35 @@ async def process_url(post_url):
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
 
+
+async def automated_posting():
+    while True:
+        try:
+            # Read links from file
+            with open('links.txt', 'r') as f:
+                links = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+            if not links:
+                print("No links in links.txt")
+                await asyncio.sleep(3600)  # wait 1 hour
+                continue
+            # Pick random link
+            post_url = random.choice(links)
+            # Fetch last post time
+            last_post_doc = collection.find_one({'type': 'last_post'})
+            if last_post_doc:
+                last_post_time = last_post_doc['timestamp']
+                print(f"Last post time: {time.ctime(last_post_time)}")
+            else:
+                print("No previous posts found.")
+            print(f"Auto-processing: {post_url}")
+            await process_url(post_url)
+            # Sleep for 30-40 seconds (for testing)
+            sleep_time = random.randint(30, 40)
+            print(f"Sleeping for {sleep_time} seconds")
+            await asyncio.sleep(sleep_time)
+        except Exception as e:
+            print(f"Error in automated posting: {e}")
+            await asyncio.sleep(600)  # wait 10 min on error
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message and update.message.from_user.id == ADMIN_ID:
@@ -216,6 +258,9 @@ async def main():
     application = Application.builder().token(BOT_TOKEN).build()
 
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+    # Start automated posting
+    asyncio.create_task(automated_posting())
 
     await application.run_polling()
 
