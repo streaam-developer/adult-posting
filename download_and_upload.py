@@ -2,7 +2,7 @@ import os
 import re
 import cloudscraper
 from telegram import Bot
-from telegram.request import Request
+from telegram.utils.request import Request
 import asyncio
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
