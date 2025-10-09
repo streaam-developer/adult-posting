@@ -243,7 +243,7 @@ async def automated_posting():
             print(f"Auto-processing: {post_url}")
             await process_url(post_url)
             # Sleep for 1-1.5 hours
-            sleep_time = random.randint(60, 90)
+            sleep_time = random.randint(10, 15)
             #sleep_time = random.randint(3600, 5400)
             print(f"Sleeping for {sleep_time} seconds")
             await asyncio.sleep(sleep_time)
