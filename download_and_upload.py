@@ -197,7 +197,8 @@ async def process_url(post_url):
             # ---------- Upload ----------
             video_msg = await upload_with_retry(bot, filename, title, description, duration)
             if video_msg:
-                msg_id = video_msg.message_id
+                msg_id = video_msg.message_id + 1
+
                 base64_string = await encode(f"get-{msg_id * abs(FILE_STORE_CHANNEL[0])}")
                 bot_username = random.choice(USERNAMES)
                 link = f"https://t.me/{bot_username}?start={base64_string}"
