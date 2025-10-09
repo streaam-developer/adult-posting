@@ -11,7 +11,15 @@ from telegram import Bot, Update
 from telegram.error import BadRequest, NetworkError, RetryAfter, TimedOut
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
-from config import ADMIN_ID, FORWARD_CHANNELS, REPLACEMENTS, USERNAMES
+from config import (
+    ADMIN_ID,
+    COLLECTION_NAME,
+    DB_NAME,
+    FORWARD_CHANNELS,
+    MONGO_URI,
+    REPLACEMENTS,
+    USERNAMES,
+)
 
 
 def parse_duration(iso_duration):
@@ -55,7 +63,7 @@ CHANNEL_ID = -1002818242381
 FILE_STORE_CHANNEL = [CHANNEL_ID]
 
 # MongoDB connection
-mongo_client = MongoClient(MONGO_URI)
+mongo_client = AsyncIOMotorClient(MONGO_URI)
 db = mongo_client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
@@ -109,7 +117,7 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
 async def process_url(post_url):
     try:
         # Check if URL already processed
-        if collection.find_one({'url': post_url}):
+        if await collection.find_one({'url': post_url}):
             print(f"URL {post_url} already processed.")
             return
 
@@ -198,9 +206,9 @@ async def process_url(post_url):
                     for forward_channel in FORWARD_CHANNELS:
                         await bot.forward_message(chat_id=forward_channel, from_chat_id=CHANNEL_ID, message_id=link_msg.message_id)
                     # Mark as processed in DB
-                    collection.insert_one({'url': post_url, 'processed_at': time.time()})
+                    await collection.insert_one({'url': post_url, 'processed_at': time.time()})
                     # Update last post time
-                    collection.update_one({'type': 'last_post'}, {'$set': {'timestamp': time.time()}}, upsert=True)
+                    await collection.update_one({'type': 'last_post'}, {'$set': {'timestamp': time.time()}}, upsert=True)
             else:
                 print("No replacements applied, skipping upload.")
                 await status_msg.edit_text("❌ No replacements applied, skipping upload.")
@@ -225,7 +233,7 @@ async def automated_posting():
             # Pick random link
             post_url = random.choice(links)
             # Fetch last post time
-            last_post_doc = collection.find_one({'type': 'last_post'})
+            last_post_doc = await collection.find_one({'type': 'last_post'})
             if last_post_doc:
                 last_post_time = last_post_doc['timestamp']
                 print(f"Last post time: {time.ctime(last_post_time)}")
