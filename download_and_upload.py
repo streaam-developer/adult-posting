@@ -8,18 +8,29 @@ from telegram import Bot
 from telegram.error import TimedOut, RetryAfter, NetworkError, BadRequest
 from config import POST_URL
 
+def parse_duration(iso_duration):
+    """Parse ISO 8601 duration to HH:MM:SS format."""
+    match = re.search(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', iso_duration)
+    if match:
+        hours = int(match.group(1) or 0)
+        minutes = int(match.group(2) or 0)
+        seconds = int(match.group(3) or 0)
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    return iso_duration
+
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
 CHANNEL_ID = -1002706635277
 post_url = POST_URL
 
 
-async def upload_with_retry(bot, file_path, caption, retries=3):
+async def upload_with_retry(bot, file_path, title, description, duration, retries=3):
     """Upload video with retry + stats."""
     file_size = os.path.getsize(file_path)
     size_mb = file_size / (1024 * 1024)
+    readable_duration = parse_duration(duration)
     msg = await bot.send_message(
         chat_id=CHANNEL_ID,
-        text=f"📤 **Starting upload...**\n🎬 *{caption}*\n📦 `{size_mb:.2f} MB`"
+        text=f"📤 **Starting upload...**\n🎬 *{title}*\n📦 `{size_mb:.2f} MB`"
     )
 
     for attempt in range(1, retries + 1):
@@ -30,7 +41,7 @@ async def upload_with_retry(bot, file_path, caption, retries=3):
                 await bot.send_video(
                     chat_id=CHANNEL_ID,
                     video=f,
-                    caption=f"Video from {caption}",
+                    caption=f"🎬 **{title}**\n\n📝 {description}\n\n⏱️ Duration: {readable_duration}",
                     read_timeout=1800,   # 30 min
                     write_timeout=1800,
                     connect_timeout=60,
@@ -63,6 +74,16 @@ async def main():
         scraper = cloudscraper.create_scraper()
         html = scraper.get(post_url).text
 
+        # Extract metadata
+        title_match = re.search(r'<meta itemprop="name\s*" content="([^"]*)"', html)
+        title = title_match.group(1) if title_match else "Unknown Title"
+
+        desc_match = re.search(r'<meta itemprop="description" content="([^"]*)"', html)
+        description = desc_match.group(1) if desc_match else "No description"
+
+        dur_match = re.search(r'<meta itemprop="duration" content="([^"]*)"', html)
+        duration = dur_match.group(1) if dur_match else "Unknown"
+
         match = re.search(r"(https?://vk[^\s\"]+\.mp4)", html)
         if not match:
             print("No video found.")
@@ -70,6 +91,8 @@ async def main():
 
         video_url = match.group(1)
         print(f"Found video URL: {video_url}")
+        print(f"Title: {title}")
+        print(f"Duration: {duration}")
 
         bot = Bot(token=BOT_TOKEN)
         async with bot:
@@ -113,7 +136,7 @@ async def main():
             await status_msg.edit_text("✅ **Download complete!** Uploading…")
 
             # ---------- Upload ----------
-            await upload_with_retry(bot, "temp_video.mp4", post_url)
+            await upload_with_retry(bot, "temp_video.mp4", title, description, duration)
 
         if os.path.exists("temp_video.mp4"):
             os.remove("temp_video.mp4")
