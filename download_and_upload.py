@@ -10,11 +10,19 @@ from config import POST_URL, REPLACEMENTS
 
 def parse_duration(iso_duration):
     """Parse ISO 8601 duration to HH:MM:SS format."""
+    # Handle formats like P0DT0H1M10S or PT1M10S
     match = re.search(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', iso_duration)
     if match:
         hours = int(match.group(1) or 0)
         minutes = int(match.group(2) or 0)
         seconds = int(match.group(3) or 0)
+        return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+    # If no match, try to extract from P0DT0H1M10S format
+    match = re.search(r'P\d+DT(\d+)H(\d+)M(\d+)S', iso_duration)
+    if match:
+        hours = int(match.group(1))
+        minutes = int(match.group(2))
+        seconds = int(match.group(3))
         return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
     return iso_duration
 
@@ -98,12 +106,10 @@ async def main():
 
         dur_match = re.search(r'<meta itemprop="duration" content="([^"]*)"', html)
         duration = dur_match.group(1) if dur_match else "Unknown"
+        readable_duration = parse_duration(duration)
 
         # Apply replacements to description
         description, modified = apply_replacements(description, REPLACEMENTS)
-        if not modified:
-            print("No replacements applied, skipping upload.")
-            return
 
         match = re.search(r"(https?://vk[^\s\"]+\.mp4)", html)
         if not match:
@@ -111,7 +117,6 @@ async def main():
             return
 
         video_url = match.group(1)
-        readable_duration = parse_duration(duration)
         print(f"Found video URL: {video_url}")
         print(f"Title: {title}")
         print(f"Duration: {readable_duration}")
@@ -159,7 +164,11 @@ async def main():
             await status_msg.edit_text("✅ **Download complete!** Uploading…")
 
             # ---------- Upload ----------
-            await upload_with_retry(bot, filename, title, description, duration)
+            if modified:
+                await upload_with_retry(bot, filename, title, description, duration)
+            else:
+                print("No replacements applied, skipping upload.")
+                await status_msg.edit_text("❌ No replacements applied, skipping upload.")
 
         if os.path.exists(filename):
             os.remove(filename)
