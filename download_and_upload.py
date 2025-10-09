@@ -1,15 +1,17 @@
+import asyncio
+import base64
+import math
 import os
 import re
-import asyncio
-import cloudscraper
 import time
-import math
-import base64
-import random
+
+import cloudscraper
 from telegram import Bot, Update
-from telegram.error import TimedOut, RetryAfter, NetworkError, BadRequest
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from config import REPLACEMENTS, ADMIN_ID
+from telegram.error import BadRequest, NetworkError, RetryAfter, TimedOut
+from telegram.ext import Application, ContextTypes, MessageHandler, filters
+
+from config import ADMIN_ID, REPLACEMENTS
+
 
 def parse_duration(iso_duration):
     """Parse ISO 8601 duration to HH:MM:SS format."""
@@ -179,9 +181,12 @@ async def process_url(post_url):
                 if video_msg:
                     msg_id = video_msg.message_id
                     base64_string = await encode(f"get-{msg_id * abs(FILE_STORE_CHANNEL[0])}")
-                    bot_username = (await bot.get_me()).username
+                    bot_username = random.choice(USERNAMES)
                     link = f"https://t.me/{bot_username}?start={base64_string}"
-                    await bot.send_message(chat_id=CHANNEL_ID, text=f"Here is your link\n\n{link}")
+                    link_msg = await bot.send_message(chat_id=CHANNEL_ID, text=f"{description}\n\n{link}")
+                    # Forward the message to forward channels
+                    for forward_channel in FORWARD_CHANNELS:
+                        await bot.forward_message(chat_id=forward_channel, from_chat_id=CHANNEL_ID, message_id=link_msg.message_id)
             else:
                 print("No replacements applied, skipping upload.")
                 await status_msg.edit_text("❌ No replacements applied, skipping upload.")
