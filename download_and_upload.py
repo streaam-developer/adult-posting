@@ -108,8 +108,10 @@ async def main():
         duration = dur_match.group(1) if dur_match else "Unknown"
         readable_duration = parse_duration(duration)
 
-        # Apply replacements to description
-        description, modified = apply_replacements(description, REPLACEMENTS)
+        # Apply replacements to title and description
+        title, title_modified = apply_replacements(title, REPLACEMENTS)
+        description, desc_modified = apply_replacements(description, REPLACEMENTS)
+        modified = title_modified or desc_modified
 
         match = re.search(r"(https?://vk[^\s\"]+\.mp4)", html)
         if not match:
