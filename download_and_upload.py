@@ -61,7 +61,7 @@ def apply_replacements(text, replacements):
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
 FILE_STORE_CHANNEL = -1002818242381
-CHANNEL_ID = [-1002747781375]
+CHANNEL_ID = -1002747781375
 
 # MongoDB connection
 mongo_client = AsyncIOMotorClient(MONGO_URI)
@@ -74,10 +74,13 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
     file_size = os.path.getsize(file_path)
     size_mb = file_size / (1024 * 1024)
     readable_duration = parse_duration(duration)
-    msg = await bot.send_message(
-        chat_id=FILE_STORE_CHANNEL,
-        text=f"📤 **Starting upload...**\n🎬 *{title}*\n📦 `{size_mb:.2f} MB`"
-    )
+    try:
+        msg = await bot.send_message(
+            chat_id=FILE_STORE_CHANNEL,
+            text=f"📤 **Starting upload...**\n🎬 *{title}*\n📦 `{size_mb:.2f} MB`"
+        )
+    except BadRequest as e:
+        print(f"❌ Chat not found: channel_id={FILE_STORE_CHANNEL}, operation=send_upload_start_message, error={e}")
 
     for attempt in range(1, retries + 1):
         try:
@@ -106,9 +109,13 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
             print(f"⚠️ Timeout/network error: {e}")
             await msg.edit_text(f"⚠️ Timeout/network error (attempt {attempt}) — retrying…")
             await asyncio.sleep(10)
+        except BadRequest as e:
+            await msg.edit_text(f"❌ Chat not found: channel_id={FILE_STORE_CHANNEL}, operation=send_video, error={e}")
+            print(f"❌ Chat not found: channel_id={FILE_STORE_CHANNEL}, operation=send_video, error={e}")
+            break
         except Exception as e:
             await msg.edit_text(f"❌ Upload failed: {e}")
-            print(f"❌ Upload failed: {e}")
+            print(f"❌ Upload failed on channel {FILE_STORE_CHANNEL}: {e}")
             break
 
     await msg.edit_text("❌ Upload failed after multiple retries.")
@@ -154,10 +161,14 @@ async def process_url(post_url):
 
         bot = Bot(token=BOT_TOKEN)
         async with bot:
-            status_msg = await bot.send_message(
-                chat_id=CHANNEL_ID,
-                text=f"⬇️ **Downloading video…**\n{post_url}"
-            )
+            try:
+                status_msg = await bot.send_message(
+                    chat_id=CHANNEL_ID,
+                    text=f"⬇️ **Downloading video…**\n{post_url}"
+                )
+            except BadRequest as e:
+                print(f"❌ Chat not found: channel_id={CHANNEL_ID}, operation=send_status_message, error={e}")
+                return
 
             # ---------- Download ----------
             with scraper.get(video_url, stream=True) as r:
@@ -202,10 +213,17 @@ async def process_url(post_url):
                 base64_string = await encode(f"get-{msg_id * abs(FILE_STORE_CHANNEL[0])}")
                 bot_username = random.choice(USERNAMES)
                 link = f"https://t.me/{bot_username}?start={base64_string}"
-                link_msg = await bot.send_message(chat_id=CHANNEL_ID, text=f"🎬 **{title}**\n\n📝 {description}\n\n⏱️ Duration: {readable_duration}\n\nclick below link for file🔗 {link}")
+                try:
+                    link_msg = await bot.send_message(chat_id=CHANNEL_ID, text=f"🎬 **{title}**\n\n📝 {description}\n\n⏱️ Duration: {readable_duration}\n\nclick below link for file🔗 {link}")
+                except BadRequest as e:
+                    print(f"❌ Chat not found: channel_id={CHANNEL_ID}, operation=send_link_message, error={e}")
+                    return
                 # Forward the message to forward channels
                 for forward_channel in FORWARD_CHANNELS:
-                    await bot.forward_message(chat_id=forward_channel, from_chat_id=CHANNEL_ID, message_id=link_msg.message_id)
+                    try:
+                        await bot.forward_message(chat_id=forward_channel, from_chat_id=CHANNEL_ID, message_id=link_msg.message_id)
+                    except BadRequest as e:
+                        print(f"❌ Chat not found: channel_id={forward_channel}, operation=forward_message, error={e}")
                 # Mark as processed in DB
                 await collection.insert_one({'url': post_url, 'processed_at': time.time()})
                 # Update last post time
