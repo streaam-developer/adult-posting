@@ -2,6 +2,6 @@ POST_URL = "https://viralkand.com/hotel-room-mein-gf-ne-lund-choos-ke-pani-nikaa
 
 # Word replacements for description (case-insensitive)
 REPLACEMENTS = {
-    "hair": "baal",
+    "hotel": "oyo",
     "Lund": "namoona"
 }
