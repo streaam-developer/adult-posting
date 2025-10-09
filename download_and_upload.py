@@ -1,6 +1,5 @@
 import subprocess
 import os
-import re
 from telegram import Bot
 
 BOT_TOKEN = '7760514362:AAEukVlluWrzqOrsO4-i_dH7F73oXQEmRgw'
@@ -9,25 +8,23 @@ CHANNEL_ID = '-1002706635277'
 post_url = 'https://viralkand.com/hotel-room-mein-gf-ne-lund-choos-ke-pani-nikaal-diya/'
 
 try:
-    print(f"Fetching page content from {post_url} using yt-dlp to bypass protection.")
-    # Use yt-dlp to get the HTML content of the page, bypassing Cloudflare
+    print(f"Extracting video URL from {post_url} using yt-dlp.")
+    # Use yt-dlp to extract the direct video URL, impersonating a browser
     process = subprocess.run(
-        ['yt-dlp', post_url, '--extractor-args', 'generic:impersonate', '--print-page'],
+        ['yt-dlp', post_url, '--get-url', '--extractor-args', 'generic:impersonate'],
         capture_output=True, text=True, check=True, encoding='utf-8'
     )
-    html_content = process.stdout
+    # The output might have multiple URLs, we'll take the first one.
+    video_url = process.stdout.strip().split('\n')[0]
 
-    # Search for the video URL in the HTML content
-    match = re.search(r'(https?://vk[^\s"]+\.mp4)', html_content)
-    if not match:
-        print("Could not find video URL in the page source.")
+    if not video_url.startswith('http'):
+        print(f"Failed to extract a valid video URL. Output: {process.stdout}")
         exit(1)
 
-    video_url = match.group(1)
     print(f"Found video URL: {video_url}")
 
     print(f"Downloading video from {video_url}")
-    # Download using yt-dlp. No need for impersonate on the direct .mp4 link.
+    # Download the extracted URL using yt-dlp
     result = subprocess.run(['yt-dlp', video_url, '-o', 'temp_video.mp4'], capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Failed to download: {result.stderr}")
@@ -42,6 +39,6 @@ try:
     os.remove('temp_video.mp4')
 
 except subprocess.CalledProcessError as e:
-    print(f"Error fetching page with yt-dlp: {e.stderr}")
+    print(f"Error extracting video URL with yt-dlp: {e.stderr}")
 except Exception as e:
     print(f"An unexpected error occurred: {e}")
