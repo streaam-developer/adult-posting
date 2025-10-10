@@ -113,7 +113,7 @@ def add_floating_text(video_path, output_path):
     dy = random.choice([-1, 1]) * random.randint(50, 150)
 
     # Text clip
-    txt_clip = TextClip("zeb.monster", fontsize=50, color='white', bg_color='black', size=(200, 100)).set_position(
+    txt_clip = TextClip("zeb.monster", font_size=50, color='white', bg_color='black', size=(200, 100)).set_position(
         lambda t: (start_x + dx * t / clip.duration, start_y + dy * t / clip.duration)
     ).set_duration(clip.duration).set_start(0)
 
