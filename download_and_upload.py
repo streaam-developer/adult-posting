@@ -14,8 +14,7 @@ from telegram import Bot, Update
 from telegram.error import BadRequest, NetworkError, RetryAfter, TimedOut
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
-from config import (ADMIN_ID, COLLECTION_NAME, DB_NAME, FORWARD_CHANNELS,
-                    MONGO_URI, REPLACEMENTS, USERNAMES)
+from config import *
 
 
 def parse_duration(iso_duration):
@@ -367,4 +366,5 @@ def run_bot():
 
 
 if __name__ == "__main__":
+    run_bot()
     run_bot()
