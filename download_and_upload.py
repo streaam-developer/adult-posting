@@ -307,7 +307,7 @@ async def automated_posting():
     while True:
         try:
             # Read links from file
-            with open('links.txt', 'r') as f:
+            with open('links.txt', 'r', encoding='utf-8', errors='ignore') as f:
                 links = [line.strip() for line in f if line.strip() and not line.startswith('#')]
             if not links:
                 print("No links in links.txt")
