@@ -101,25 +101,39 @@ SITE_EXTRACTORS = {
 # Video editor function
 def add_floating_text(video_path, output_path):
     """Add floating 'zeb.monster' text to video in random places and directions."""
-    clip = VideoFileClip(video_path)
-    width, height = clip.size
+    try:
+        clip = VideoFileClip(video_path)
+        width, height = clip.size
 
-    # Random start position
-    start_x = random.randint(0, width - 200)
-    start_y = random.randint(0, height - 100)
+        # Random start position
+        start_x = random.randint(0, width - 200)
+        start_y = random.randint(0, height - 100)
 
-    # Random direction vectors
-    dx = random.choice([-1, 1]) * random.randint(50, 150)
-    dy = random.choice([-1, 1]) * random.randint(50, 150)
+        # Random direction vectors
+        dx = random.choice([-1, 1]) * random.randint(50, 150)
+        dy = random.choice([-1, 1]) * random.randint(50, 150)
 
-    # Text clip
-    txt_clip = TextClip(txt="zeb.monster", font_size=50, color='white', bg_color='black', size=(200, 100)).set_position(
-        lambda t: (start_x + dx * t / clip.duration, start_y + dy * t / clip.duration)
-    ).set_duration(clip.duration).set_start(0)
+        # Text clip
+        try:
+            # This is a workaround for older moviepy versions
+            txt_clip = TextClip("zeb.monster", fontsize=50, color='white', bg_color='black', size=(200, 100)).set_position(
+                lambda t: (start_x + dx * t / clip.duration, start_y + dy * t / clip.duration)
+            ).set_duration(clip.duration).set_start(0)
+        except Exception:
+            # This should work for newer moviepy versions
+            txt_clip = TextClip("zeb.monster", font_size=50, color='white', bg_color='black', size=(200, 100)).set_position(
+                lambda t: (start_x + dx * t / clip.duration, start_y + dy * t / clip.duration)
+            ).set_duration(clip.duration).set_start(0)
 
-    # Composite
-    video = CompositeVideoClip([clip, txt_clip])
-    video.write_videofile(output_path, codec='libx264', audio_codec='aac')
+
+        # Composite
+        video = CompositeVideoClip([clip, txt_clip])
+        video.write_videofile(output_path, codec='libx264', audio_codec='aac')
+    except Exception as e:
+        print(f"Error in add_floating_text: {e}")
+        print("Video editing failed. Please check if ImageMagick is installed and configured correctly.")
+        import shutil
+        shutil.copy(video_path, output_path)
 
 
 async def upload_with_retry(bot, file_path, title, description, duration, retries=3):
