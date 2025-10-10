@@ -12,15 +12,8 @@ from telegram import Bot, Update
 from telegram.error import BadRequest, NetworkError, RetryAfter, TimedOut
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
-from config import (
-    ADMIN_ID,
-    COLLECTION_NAME,
-    DB_NAME,
-    FORWARD_CHANNELS,
-    MONGO_URI,
-    REPLACEMENTS,
-    USERNAMES,
-)
+from config import (ADMIN_ID, COLLECTION_NAME, DB_NAME, FORWARD_CHANNELS,
+                    MONGO_URI, REPLACEMENTS, USERNAMES)
 
 
 def parse_duration(iso_duration):
@@ -67,6 +60,64 @@ FILE_STORE_CHANNEL = [-1002747781375]
 mongo_client = AsyncIOMotorClient(MONGO_URI)
 db = mongo_client[DB_NAME]
 collection = db[COLLECTION_NAME]
+
+
+# Site-specific extractors
+def extract_title_default(html):
+    match = re.search(r'<meta itemprop="name\s*" content="([^"]*)"', html)
+    return match.group(1) if match else "Unknown Title"
+
+def extract_description_default(html):
+    match = re.search(r'<meta itemprop="description" content="([^"]*)"', html)
+    return match.group(1) if match else "No description"
+
+def extract_duration_default(html):
+    match = re.search(r'<meta itemprop="duration" content="([^"]*)"', html)
+    return match.group(1) if match else "Unknown"
+
+def extract_video_url_default(html):
+    match = re.search(r"(https?://[^\s\"]+\.mp4)", html)
+    return match.group(1) if match else None
+
+SITE_EXTRACTORS = {
+    'viralkand.com': {
+        'extract_title': extract_title_default,
+        'extract_description': extract_description_default,
+        'extract_duration': extract_duration_default,
+        'extract_video_url': lambda html: re.search(r"(https?://vk[^\s\"]+\.mp4)", html).group(1) if re.search(r"(https?://vk[^\s\"]+\.mp4)", html) else None,
+    },
+    # Add more domains as needed
+    'default': {
+        'extract_title': extract_title_default,
+        'extract_description': extract_description_default,
+        'extract_duration': extract_duration_default,
+        'extract_video_url': extract_video_url_default,
+    }
+}
+
+
+# Video editor function
+def add_floating_text(video_path, output_path):
+    """Add floating 'zeb.monster' text to video in random places and directions."""
+    clip = VideoFileClip(video_path)
+    width, height = clip.size
+
+    # Random start position
+    start_x = random.randint(0, width - 200)
+    start_y = random.randint(0, height - 100)
+
+    # Random direction vectors
+    dx = random.choice([-1, 1]) * random.randint(50, 150)
+    dy = random.choice([-1, 1]) * random.randint(50, 150)
+
+    # Text clip
+    txt_clip = TextClip("zeb.monster", fontsize=50, color='white', bg_color='black', size=(200, 100)).set_position(
+        lambda t: (start_x + dx * t / clip.duration, start_y + dy * t / clip.duration)
+    ).set_duration(clip.duration).set_start(0)
+
+    # Composite
+    video = CompositeVideoClip([clip, txt_clip])
+    video.write_videofile(output_path, codec='libx264', audio_codec='aac')
 
 
 async def upload_with_retry(bot, file_path, title, description, duration, retries=3):
@@ -126,15 +177,14 @@ async def process_url(post_url):
         scraper = cloudscraper.create_scraper()
         html = scraper.get(post_url).text
 
+        # Get domain
+        domain = urlparse(post_url).netloc
+        extractor = SITE_EXTRACTORS.get(domain, SITE_EXTRACTORS['default'])
+
         # Extract metadata
-        title_match = re.search(r'<meta itemprop="name\s*" content="([^"]*)"', html)
-        title = title_match.group(1) if title_match else "Unknown Title"
-
-        desc_match = re.search(r'<meta itemprop="description" content="([^"]*)"', html)
-        description = desc_match.group(1) if desc_match else "No description"
-
-        dur_match = re.search(r'<meta itemprop="duration" content="([^"]*)"', html)
-        duration = dur_match.group(1) if dur_match else "Unknown"
+        title = extractor['extract_title'](html)
+        description = extractor['extract_description'](html)
+        duration = extractor['extract_duration'](html)
         readable_duration = parse_duration(duration)
 
         # Apply replacements to title and description
@@ -142,12 +192,11 @@ async def process_url(post_url):
         description, desc_modified = apply_replacements(description, REPLACEMENTS)
         modified = title_modified or desc_modified
 
-        match = re.search(r"(https?://vk[^\s\"]+\.mp4)", html)
-        if not match:
+        video_url = extractor['extract_video_url'](html)
+        if not video_url:
             print("No video found.")
             return
 
-        video_url = match.group(1)
         print(f"Found video URL: {video_url}")
         print(f"Title: {title}")
         print(f"Duration: {readable_duration}")
@@ -192,10 +241,16 @@ async def process_url(post_url):
                                     print(f"Edit error: {e}")
                             last_update = now
 
-            await status_msg.edit_text("✅ **Download complete!** Uploading…")
+            await status_msg.edit_text("✅ **Download complete!** Editing video…")
+
+            # ---------- Edit Video ----------
+            edited_filename = filename.replace('.mp4', '_edited.mp4')
+            add_floating_text(filename, edited_filename)
+
+            await status_msg.edit_text("✅ **Video edited!** Uploading…")
 
             # ---------- Upload ----------
-            video_msg = await upload_with_retry(bot, filename, title, description, duration)
+            video_msg = await upload_with_retry(bot, edited_filename, title, description, duration)
             if video_msg:
                 msg_id = video_msg.message_id + 1
 
@@ -216,6 +271,8 @@ async def process_url(post_url):
 
         if os.path.exists(filename):
             os.remove(filename)
+        if os.path.exists(edited_filename):
+            os.remove(edited_filename)
 
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
