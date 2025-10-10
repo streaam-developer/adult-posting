@@ -8,8 +8,8 @@ import time
 from urllib.parse import urlparse
 
 import cloudscraper
+import ffmpeg
 from motor.motor_asyncio import AsyncIOMotorClient
-from moviepy import CompositeVideoClip, TextClip, VideoFileClip
 from telegram import Bot, Update
 from telegram.error import BadRequest, NetworkError, RetryAfter, TimedOut
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
@@ -102,36 +102,33 @@ SITE_EXTRACTORS = {
 def add_floating_text(video_path, output_path):
     """Add floating 'zeb.monster' text to video in random places and directions."""
     try:
-        clip = VideoFileClip(video_path)
-        width, height = clip.size
+        # Get video dimensions
+        probe = ffmpeg.probe(video_path)
+        video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
+        width = int(video_stream['width'])
+        height = int(video_stream['height'])
 
-        # Random start position
+        # Random start position and direction
         start_x = random.randint(0, width - 200)
         start_y = random.randint(0, height - 100)
-
-        # Random direction vectors
         dx = random.choice([-1, 1]) * random.randint(50, 150)
         dy = random.choice([-1, 1]) * random.randint(50, 150)
 
-        # Text clip
-        try:
-            # This is a workaround for older moviepy versions
-            txt_clip = TextClip("zeb.monster", fontsize=50, color='white', bg_color='black', size=(200, 100)).set_position(
-                lambda t: (start_x + dx * t / clip.duration, start_y + dy * t / clip.duration)
-            ).set_duration(clip.duration).set_start(0)
-        except Exception:
-            # This should work for newer moviepy versions
-            txt_clip = TextClip("zeb.monster", font_size=50, color='white', bg_color='black', size=(200, 100)).set_position(
-                lambda t: (start_x + dx * t / clip.duration, start_y + dy * t / clip.duration)
-            ).set_duration(clip.duration).set_start(0)
+        # Construct the ffmpeg drawtext filter
+        text = 'zeb.monster'
+        x_expr = f"{start_x} + {dx}*t"
+        y_expr = f"{start_y} + {dy}*t"
 
-
-        # Composite
-        video = CompositeVideoClip([clip, txt_clip])
-        video.write_videofile(output_path, codec='libx264', audio_codec='aac')
+        (
+            ffmpeg
+            .input(video_path)
+            .drawtext(text=text, x=x_expr, y=y_expr, fontsize=50, fontcolor='white', box=1, boxcolor='black@0.5')
+            .output(output_path, codec='libx264', audio_codec='aac')
+            .run(overwrite_output=True)
+        )
     except Exception as e:
         print(f"Error in add_floating_text: {e}")
-        print("Video editing failed. Please check if ImageMagick is installed and configured correctly.")
+        print("Video editing failed. Please ensure ffmpeg is installed and in your PATH.")
         import shutil
         shutil.copy(video_path, output_path)
 
@@ -150,11 +147,16 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
         try:
             print(f"📤 Attempt {attempt}: uploading {size_mb:.2f} MB…")
             start = time.time()
+
+            caption = f"🎬 **{title}**\n\n📝 {description}\n\n⏱️ Duration: {readable_duration}"
+            if len(caption) > 1024:
+                caption = f"🎬 **{title}**"
+
             with open(file_path, "rb") as f:
                 video_msg = await bot.send_video(
                     chat_id=CHANNEL_ID,
                     video=f,
-                    caption=f"🎬 **{title}**\n\n📝 {description}\n\n⏱️ Duration: {readable_duration}",
+                    caption=caption,
                     read_timeout=1800,   # 30 min
                     write_timeout=1800,
                     connect_timeout=60,

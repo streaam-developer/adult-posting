@@ -2,4 +2,4 @@ python-telegram-bot
 cloudscraper
 nest-asyncio
 motor
-moviepy
+ffmpeg-python
