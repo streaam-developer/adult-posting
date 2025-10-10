@@ -108,16 +108,20 @@ def add_floating_text(video_path, output_path):
         width = int(video_stream['width'])
         height = int(video_stream['height'])
 
-        # Random start position and direction
-        start_x = random.randint(0, width - 200)
-        start_y = random.randint(0, height - 100)
-        dx = random.choice([-1, 1]) * random.randint(50, 150)
-        dy = random.choice([-1, 1]) * random.randint(50, 150)
+        # Center of the screen
+        center_x = width / 2
+        center_y = height / 2
+
+        # Random amplitudes and frequencies for sinusoidal movement
+        amplitude_x = random.uniform(0, width / 4)
+        amplitude_y = random.uniform(0, height / 4)
+        freq_x = random.uniform(0.1, 0.5)
+        freq_y = random.uniform(0.1, 0.5)
 
         # Construct the ffmpeg drawtext filter
         text = 'zeb.monster'
-        x_expr = f"{start_x} + {dx}*t"
-        y_expr = f"{start_y} + {dy}*t"
+        x_expr = f"{center_x} + {amplitude_x}*sin({freq_x}*2*PI*t)"
+        y_expr = f"{center_y} + {amplitude_y}*sin({freq_y}*2*PI*t)"
 
         (
             ffmpeg
