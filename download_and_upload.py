@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 
 import cloudscraper
 from motor.motor_asyncio import AsyncIOMotorClient
-from moviepy.editor import CompositeVideoClip, TextClip, VideoFileClip
+from moviepy import CompositeVideoClip, TextClip, VideoFileClip
 from telegram import Bot, Update
 from telegram.error import BadRequest, NetworkError, RetryAfter, TimedOut
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
