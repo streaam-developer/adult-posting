@@ -21,3 +21,6 @@ FORWARD_CHANNELS = [-1002981998032]  # Add channel IDs here, e.g., [-10012345678
 MONGO_URI = 'mongodb+srv://sonukumarkrbbu60:lfkTvljnt25ehTt9@cluster0.2wrbftx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'  # Replace with your MongoDB URI
 DB_NAME = 'video_bot'
 COLLECTION_NAME = 'processed_urls'
+
+# Video editing setting
+VIDEO_EDITING_ENABLED = False  # Set to False to disable video editing

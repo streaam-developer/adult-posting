@@ -3,3 +3,4 @@ cloudscraper
 nest-asyncio
 motor
 ffmpeg-python
+requests

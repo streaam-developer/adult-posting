@@ -263,16 +263,19 @@ async def process_url(post_url):
                                     print(f"Edit error: {e}")
                             last_update = now
 
-            await status_msg.edit_text("✅ **Download complete!** Editing video…")
-
             # ---------- Edit Video ----------
-            edited_filename = filename.replace('.mp4', '_edited.mp4')
-            add_floating_text(filename, edited_filename)
-
-            await status_msg.edit_text("✅ **Video edited!** Uploading…")
+            if VIDEO_EDITING_ENABLED:
+                await status_msg.edit_text("✅ **Download complete!** Editing video…")
+                edited_filename = filename.replace('.mp4', '_edited.mp4')
+                add_floating_text(filename, edited_filename)
+                await status_msg.edit_text("✅ **Video edited!** Uploading…")
+                video_to_upload = edited_filename
+            else:
+                await status_msg.edit_text("✅ **Download complete!** Uploading…")
+                video_to_upload = filename
 
             # ---------- Upload ----------
-            video_msg = await upload_with_retry(bot, edited_filename, title, description, duration)
+            video_msg = await upload_with_retry(bot, video_to_upload, title, description, duration)
             if video_msg:
                 msg_id = video_msg.message_id + 1
 
@@ -293,7 +296,7 @@ async def process_url(post_url):
 
         if os.path.exists(filename):
             os.remove(filename)
-        if os.path.exists(edited_filename):
+        if 'edited_filename' in locals() and os.path.exists(edited_filename):
             os.remove(edited_filename)
 
     except Exception as e:
@@ -322,8 +325,8 @@ async def automated_posting():
             print(f"Auto-processing: {post_url}")
             await process_url(post_url)
             # Sleep for 1-1.5 hours
-            sleep_time = random.randint(60, 90)
-            #sleep_time = random.randint(3600, 5400)
+            #sleep_time = random.randint(60, 90)
+            sleep_time = random.randint(3600, 5400)
             print(f"Sleeping for {sleep_time} seconds")
             await asyncio.sleep(sleep_time)
         except Exception as e:
