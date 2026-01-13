@@ -203,12 +203,16 @@ async def generate_site():
                 dt_object = datetime.fromisoformat(upload_date.replace('Z', '+00:00'))
             except ValueError:
                 try:
-                    dt_object = datetime.strptime(upload_date, '%Y-%m-%d')
+                    dt_object = datetime.strptime(upload_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
                 except (ValueError, TypeError):
                     pass
         if dt_object is None:
             processed_at_ts = post.get('processed_at')
             dt_object = datetime.fromtimestamp(processed_at_ts, tz=timezone.utc) if processed_at_ts else datetime.now(timezone.utc)
+
+        # Ensure dt_object is timezone-aware before comparison
+        if dt_object.tzinfo is None:
+            dt_object = dt_object.replace(tzinfo=timezone.utc)
 
         if dt_object <= now:
             filtered_posts.append(post)
@@ -217,6 +221,8 @@ async def generate_site():
     def get_sort_key(post):
         upload_date = post.get('upload_date')
         if isinstance(upload_date, datetime):
+            if upload_date.tzinfo is None:
+                return upload_date.replace(tzinfo=timezone.utc)
             return upload_date
         processed_at = post.get('processed_at', 0)
         return datetime.fromtimestamp(processed_at, tz=timezone.utc)
