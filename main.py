@@ -3,6 +3,7 @@ import os
 import random
 import time
 from urllib.parse import urlparse
+from datetime import datetime
 
 import cloudscraper
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -138,7 +139,13 @@ async def process_url(post_url):
                 print("No video found.")
                 return
             upload_date_extractor = extractor.get('extract_upload_date')
-            upload_date = upload_date_extractor(html) if upload_date_extractor else None
+            upload_date_str = upload_date_extractor(html) if upload_date_extractor else None
+            upload_date = None
+            if upload_date_str:
+                try:
+                    upload_date = datetime.fromisoformat(upload_date_str)
+                except ValueError:
+                    print(f"Could not parse upload_date: {upload_date_str}")
             
             thumbnail_url_extractor = extractor.get('extract_thumbnail_url')
             thumbnail_url = thumbnail_url_extractor(html) if thumbnail_url_extractor else None

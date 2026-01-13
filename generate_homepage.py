@@ -2,7 +2,7 @@ import asyncio
 import os
 import json
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
 from jinja2 import Environment, FileSystemLoader
 
@@ -153,10 +153,10 @@ def generate_sitemap(posts):
         })
         
     sitemap_xml = template.render(
-        site_url=SITE_URL,
-        posts=sitemap_posts,
-        now_iso=datetime.utcnow().isoformat()
-    )
+    site_url=SITE_URL,
+    posts=sitemap_posts,
+    now_iso=datetime.now(timezone.utc).isoformat()
+)
     with open(os.path.join(SITE_DIR, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write(sitemap_xml)
 
@@ -189,6 +189,29 @@ async def generate_site():
     query = {'url': {'$exists': True}, 'title': {'$exists': True}, 'telegram_link': {'$exists': True}}
     posts_cursor = collection.find(query)
     posts = await posts_cursor.to_list(length=None)
+
+    # Filter posts to only include those with upload_date <= now
+    now = datetime.now(timezone.utc)
+    filtered_posts = []
+    for post in posts:
+        upload_date_str = post.get('upload_date')
+        dt_object = None
+        if upload_date_str:
+            try:
+                dt_object = datetime.fromisoformat(upload_date_str.replace('Z', '+00:00'))
+            except ValueError:
+                try:
+                    dt_object = datetime.strptime(upload_date_str, '%Y-%m-%d')
+                except (ValueError, TypeError):
+                    pass
+        if dt_object is None:
+            processed_at_ts = post.get('processed_at')
+            dt_object = datetime.fromtimestamp(processed_at_ts) if processed_at_ts else datetime.utcnow()
+
+        if dt_object <= now:
+            filtered_posts.append(post)
+
+    posts = filtered_posts
     posts.sort(key=lambda x: x.get('upload_date') or datetime.fromtimestamp(x.get('processed_at', 0)).isoformat(), reverse=True)
     
     print(f"Found {len(posts)} posts to generate.")
@@ -252,20 +275,20 @@ async def generate_site():
         post_html = post_template.render(
             seo=seo_data,
             post=processed_post_data,
-            now=datetime.utcnow()
+            now=datetime.now(timezone.utc)
         )
         with open(os.path.join(POSTS_DIR, f"{post_id}.html"), "w", encoding="utf-8") as f:
             f.write(post_html)
 
     # 5. Generate homepage
     homepage_seo = {'title': "Homepage | My Awesome Site", 'description': "The best place to find awesome content.", 'canonical_url': SITE_URL, 'image_url': f"{SITE_URL}/static/default-social-image.png"}
-    index_html = index_template.render(seo=homepage_seo, now=datetime.utcnow())
+    index_html = index_template.render(seo=homepage_seo, now=datetime.now(timezone.utc))
     with open(os.path.join(SITE_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(index_html)
-        
+
     # 6. Generate Search page
     search_seo = {'title': "Search | My Awesome Site", 'description': "Search for content on our site.", 'canonical_url': f"{SITE_URL}/search.html", 'image_url': f"{SITE_URL}/static/default-social-image.png"}
-    search_html = search_template.render(seo=search_seo, now=datetime.utcnow())
+    search_html = search_template.render(seo=search_seo, now=datetime.now(timezone.utc))
     with open(os.path.join(SITE_DIR, "search.html"), "w", encoding="utf-8") as f:
         f.write(search_html)
 
