@@ -2,8 +2,26 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>http://127.0.0.1:8000</loc>
-        <lastmod>2026-01-13T07:34:50.731725</lastmod>
+        <lastmod>2026-01-13T07:55:48.982353</lastmod>
         <priority>1.00</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965fa6f16d99e6dceb0a950.html</loc>
+        <lastmod>2026-01-13T13:25:27.127850</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965f8ea3227fe2d43d0f548.html</loc>
+        <lastmod>2026-01-13T13:18:58.188170</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965f66d54e0b51db1e7df22.html</loc>
+        <lastmod>2026-01-13T13:08:21.485747</lastmod>
+        <priority>0.80</priority>
     </url>
     
     <url>

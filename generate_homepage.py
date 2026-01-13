@@ -77,35 +77,15 @@ def setup_templates():
     with open(os.path.join(TEMPLATE_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write('''{% extends "base.html" %}
 {% block content %}
-<div class="grid">
-    {% for post in posts %}
-    <article>
-        <a href="{{ post.page_url }}" style="text-decoration: none;">
-            <div class="card">
-                <img src="{{ post.thumbnail_url }}" alt="{{ post.title }}" style="width: 100%; height: auto; object-fit: cover; border-radius: 5px 5px 0 0;">
-                <div class="card-content">
-                    <h4 style="margin-bottom: 0.5rem;">{{ post.title }}</h4>
-                    <small>Uploaded on {{ post.human_date }}</small>
-                </div>
-            </div>
-        </a>
-    </article>
-    {% endfor %}
+<div id="post-grid-container" class="post-grid">
+    <!-- Posts will be loaded here by JavaScript -->
 </div>
-<style>
-.card {
-    background: #fff;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
-}
-.card:hover {
-    transform: translateY(-5px);
-}
-.card-content {
-    padding: 1rem;
-}
-</style>
+<div id="loading" style="text-align: center; margin: 2rem 0; display: none;">
+    <p>Loading more posts...</p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/app.js"></script>
 {% endblock %}''')
         
     # Post Detail Template
@@ -191,6 +171,11 @@ def generate_search_index(posts):
     with open(os.path.join(SITE_DIR, "search_index.json"), "w", encoding="utf-8") as f:
         json.dump(search_data, f)
 
+def generate_posts_json(posts):
+    with open(os.path.join(SITE_DIR, "posts.json"), "w", encoding="utf-8") as f:
+        json.dump(posts, f)
+
+
 
 async def generate_site():
     print("Starting website generation with search features...")
@@ -273,7 +258,7 @@ async def generate_site():
 
     # 5. Generate homepage
     homepage_seo = {'title': "Homepage | My Awesome Site", 'description': "The best place to find awesome content.", 'canonical_url': SITE_URL, 'image_url': f"{SITE_URL}/static/default-social-image.png"}
-    index_html = index_template.render(seo=homepage_seo, posts=processed_posts, now=datetime.utcnow())
+    index_html = index_template.render(seo=homepage_seo, now=datetime.utcnow())
     with open(os.path.join(SITE_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(index_html)
         
@@ -287,6 +272,7 @@ async def generate_site():
     generate_robots_txt()
     generate_sitemap(processed_posts)
     generate_search_index(processed_posts)
+    generate_posts_json(processed_posts)
 
     # 8. Cleanup template directory
     shutil.rmtree(TEMPLATE_DIR)

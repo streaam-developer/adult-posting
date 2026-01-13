@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 import cloudscraper
 from motor.motor_asyncio import AsyncIOMotorClient
+from telegram.error import BadRequest, NetworkError, RetryAfter, TimedOut
 
 from config import *
 from extractors import SITE_EXTRACTORS
@@ -23,7 +24,6 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
     import math
     import time
     from telegram import Bot
-    from telegram.error import BadRequest, NetworkError, RetryAfter, TimedOut
 
     file_size = os.path.getsize(file_path)
     size_mb = file_size / (1024 * 1024)
@@ -148,7 +148,8 @@ async def process_url(post_url):
                 filename = thumbnail_url.split('/')[-1]
                 path = f'thumbnails/{filename}'
                 try:
-                    with scraper.get(thumbnail_url, stream=True) as r:
+                    headers = {'Referer': post_url}
+                    with scraper.get(thumbnail_url, stream=True, headers=headers) as r:
                         r.raise_for_status()
                         with open(path, 'wb') as f:
                             for chunk in r.iter_content(1024):
@@ -164,7 +165,9 @@ async def process_url(post_url):
             print(f"Duration: {readable_duration}")
 
         from telegram import Bot
-        bot = Bot(token=BOT_TOKEN)
+        from telegram.request import HTTPXRequest
+        request = HTTPXRequest(connect_timeout=10, read_timeout=20)
+        bot = Bot(token=BOT_TOKEN, request=request)
         async with bot:
             status_msg = await bot.send_message(
                 chat_id=CHANNEL_ID,
@@ -173,7 +176,8 @@ async def process_url(post_url):
 
             # ---------- Download ----------
             scraper = cloudscraper.create_scraper()  # Reinitialize if needed
-            with scraper.get(video_url, stream=True) as r:
+            headers = {'Referer': post_url}
+            with scraper.get(video_url, stream=True, headers=headers) as r:
                 r.raise_for_status()
                 total = int(r.headers.get("content-length", 0))
                 downloaded = 0
