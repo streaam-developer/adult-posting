@@ -10,7 +10,7 @@ from generate_homepage import generate_site
 from config import POST_INTERVAL_MIN, POST_INTERVAL_MAX
 
 def run_fastapi_server():
-    uvicorn.run("api:app", host="127.0.0.1", port=8000, log_level="info")
+    uvicorn.run("api:app", host="0.0.0.0", port=8000, log_level="info")
 
 async def main():
     while True:
