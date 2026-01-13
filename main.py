@@ -11,7 +11,6 @@ from config import *
 from extractors import SITE_EXTRACTORS
 from utils import apply_replacements, parse_duration, sanitize_filename
 from video_processing import add_floating_text
-from generate_homepage import generate_site
 
 # MongoDB connection
 mongo_client = AsyncIOMotorClient(MONGO_URI)
@@ -114,9 +113,9 @@ async def process_url(post_url):
                 extractor.update(SITE_EXTRACTORS[domain])
 
             # Extract metadata
-            title = extractor['extract_title'](html)
-            description = extractor['extract_description'](html)
-            duration = extractor['extract_duration'](html)
+            title = extractor.get('extract_title', lambda h: "Unknown Title")(html)
+            description = extractor.get('extract_description', lambda h: "No description")(html)
+            duration = extractor.get('extract_duration', lambda h: "Unknown")(html)
             readable_duration = parse_duration(duration)
 
             # Apply replacements to title and description
@@ -134,12 +133,15 @@ async def process_url(post_url):
             thumbnail_url = None
             thumbnail_local_path = None
 
-            video_url = extractor['extract_video_url'](html)
+            video_url = extractor.get('extract_video_url')(html)
             if not video_url:
                 print("No video found.")
                 return
-            upload_date = extractor['extract_upload_date'](html)
-            thumbnail_url = extractor['extract_thumbnail_url'](html)
+            upload_date_extractor = extractor.get('extract_upload_date')
+            upload_date = upload_date_extractor(html) if upload_date_extractor else None
+            
+            thumbnail_url_extractor = extractor.get('extract_thumbnail_url')
+            thumbnail_url = thumbnail_url_extractor(html) if thumbnail_url_extractor else None
             thumbnail_local_path = None
             if thumbnail_url:
                 os.makedirs('thumbnails', exist_ok=True)
@@ -240,9 +242,6 @@ async def process_url(post_url):
                 })
                 # Update last post time
                 await collection.update_one({'type': 'last_post'}, {'$set': {'timestamp': time.time()}}, upsert=True)
-                
-                # Generate the static site
-                await generate_site()
             else:
                 print("Upload failed.")
                 await status_msg.edit_text("❌ Upload failed.")
@@ -253,34 +252,30 @@ async def process_url(post_url):
             os.remove(edited_filename)
 
     except Exception as e:
+        import traceback
         print(f"❌ Unexpected error: {e}")
+        traceback.print_exc()
 
 async def automated_posting():
-    while True:
-        try:
-            # Read links from file
-            with open('links.txt', 'r', encoding='utf-8', errors='ignore') as f:
-                links = [line.strip() for line in f if line.strip() and not line.startswith('#')]
-            if not links:
-                print("No links in links.txt")
-                await asyncio.sleep(3600)  # wait 1 hour
-                continue
-            # Pick random link
-            post_url = random.choice(links)
-            # Fetch last post time
-            last_post_doc = await collection.find_one({'type': 'last_post'})
-            if last_post_doc:
-                last_post_time = last_post_doc['timestamp']
-                print(f"Last post time: {time.ctime(last_post_time)}")
-            else:
-                print("No previous posts found.")
-            print(f"Auto-processing: {post_url}")
-            await process_url(post_url)
-            # Sleep for 1-1.5 hours
-            #sleep_time = random.randint(60, 90)
-            sleep_time = random.randint(20, 40)
-            print(f"Sleeping for {sleep_time} seconds")
-            await asyncio.sleep(sleep_time)
-        except Exception as e:
-            print(f"Error in automated posting: {e}")
-            await asyncio.sleep(600)  # wait 10 min on error
+    try:
+        # Read links from file
+        with open('links.txt', 'r', encoding='utf-8', errors='ignore') as f:
+            links = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        if not links:
+            print("No links in links.txt")
+            return
+        # Pick random link
+        post_url = random.choice(links)
+        # Fetch last post time
+        last_post_doc = await collection.find_one({'type': 'last_post'})
+        if last_post_doc:
+            last_post_time = last_post_doc['timestamp']
+            print(f"Last post time: {time.ctime(last_post_time)}")
+        else:
+            print("No previous posts found.")
+        print(f"Auto-processing: {post_url}")
+        await process_url(post_url)
+    except Exception as e:
+        import traceback
+        print(f"Error in automated posting: {e}")
+        traceback.print_exc()

@@ -50,12 +50,13 @@ def setup_templates():
     <meta property="twitter:description" content="{{ seo.description }}">
     <meta property="twitter:image" content="{{ seo.image_url }}">
     
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
         <header class="site-header">
-            <h1><a href="/" style="text-decoration: none; color: inherit;">My Awesome Site</a></h1>
+            <h1><a href="/" style="text-decoration: none; color: inherit;">Adult Posting</a></h1>
             <nav>
                 <a href="/">Home</a>
                 <a href="/search.html">Search</a>
@@ -76,38 +77,54 @@ def setup_templates():
     with open(os.path.join(TEMPLATE_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write("""{% extends "base.html" %}
 {% block content %}
-<div class="post-grid">
+<div class="grid">
     {% for post in posts %}
-    <article class="post-card">
-        <a href="{{ post.page_url }}">
-            <img src="{{ post.thumbnail_url }}" alt="{{ post.title }}" class="post-thumbnail">
-            <div class="post-content">
-                <h2 class="post-title">{{ post.title }}</h2>
-                <p class="post-meta">Uploaded on {{ post.human_date }}</p>
+    <article>
+        <a href="{{ post.page_url }}" style="text-decoration: none;">
+            <div class="card">
+                <img src="{{ post.thumbnail_url }}" alt="{{ post.title }}" style="width: 100%; height: auto; object-fit: cover; border-radius: 5px 5px 0 0;">
+                <div class="card-content">
+                    <h4 style="margin-bottom: 0.5rem;">{{ post.title }}</h4>
+                    <small>Uploaded on {{ post.human_date }}</small>
+                </div>
             </div>
         </a>
     </article>
     {% endfor %}
 </div>
+<style>
+.card {
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.card-content {
+    padding: 1rem;
+}
+</style>
 {% endblock %}""")
         
     # Post Detail Template
     with open(os.path.join(TEMPLATE_DIR, "post.html"), "w", encoding="utf-8") as f:
         f.write("""{% extends "base.html" %}
 {% block content %}
-<div class="post-detail-container">
-    <div class="post-detail-header">
+<article>
+    <header>
         <h1>{{ post.title }}</h1>
-        <p class="post-meta">Uploaded on {{ post.human_date }}</p>
-    </div>
+        <p><small>Uploaded on {{ post.human_date }}</small></p>
+    </header>
     {% if post.thumbnail_url %}
-    <img src="{{ post.thumbnail_url }}" alt="Thumbnail for {{ post.title }}" style="max-width:100%; border-radius: 8px; margin-bottom: 1rem;">
+    <img src="{{ post.thumbnail_url }}" alt="Thumbnail for {{ post.title }}" style="width: 100%; max-width: 600px; height: auto; border-radius: 8px; margin-bottom: 2rem;">
     {% endif %}
-    <div class="post-detail-description">
-        <p>{{ post.description | nl2br }}</p>
-    </div>
-    <a href="{{ post.telegram_link }}" class="get-file-btn" target="_blank" rel="noopener noreferrer">Get File</a>
-</div>
+    
+    <p>{{ post.description | nl2br }}</p>
+    
+    <a href="{{ post.telegram_link }}" role="button" class="contrast" target="_blank" rel="noopener noreferrer">Get File</a>
+</article>
 {% endblock %}""")
 
     # Search Page Template
