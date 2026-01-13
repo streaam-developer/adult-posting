@@ -208,7 +208,7 @@ async def generate_site():
                     pass
         if dt_object is None:
             processed_at_ts = post.get('processed_at')
-            dt_object = datetime.fromtimestamp(processed_at_ts) if processed_at_ts else datetime.now(timezone.utc)
+            dt_object = datetime.fromtimestamp(processed_at_ts, tz=timezone.utc) if processed_at_ts else datetime.now(timezone.utc)
 
         if dt_object <= now:
             filtered_posts.append(post)
@@ -219,7 +219,7 @@ async def generate_site():
         if isinstance(upload_date, datetime):
             return upload_date
         processed_at = post.get('processed_at', 0)
-        return datetime.fromtimestamp(processed_at)
+        return datetime.fromtimestamp(processed_at, tz=timezone.utc)
     posts.sort(key=get_sort_key, reverse=True)
     
     print(f"Found {len(posts)} posts to generate.")
@@ -259,7 +259,7 @@ async def generate_site():
         
         if dt_object is None:
             processed_at_ts = post.get('processed_at')
-            dt_object = datetime.fromtimestamp(processed_at_ts) if processed_at_ts else datetime.utcnow()
+            dt_object = datetime.fromtimestamp(processed_at_ts, tz=timezone.utc) if processed_at_ts else datetime.now(timezone.utc)
 
         human_date = dt_object.strftime('%B %d, %Y')
         iso_date = dt_object.isoformat()
