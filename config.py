@@ -34,8 +34,8 @@ SITE_URL = "http://127.0.0.1:8000"  # Your website's base URL
 POSTS_PER_PAGE = 12
 
 # Interval for automated posting (in seconds)
-POST_INTERVAL_MIN = 60
-POST_INTERVAL_MAX = 300
+POST_INTERVAL_MIN = 30
+POST_INTERVAL_MAX = 40
 
 # Number of concurrent downloads/uploads
 CONCURRENT_TASKS = 1
