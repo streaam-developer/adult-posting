@@ -189,10 +189,13 @@ async def generate_site():
     search_template = env.get_template("search.html")
     
     # 1. Prepare directories
-    if os.path.exists(SITE_DIR):
-        shutil.rmtree(SITE_DIR)
+    os.makedirs(SITE_DIR, exist_ok=True)
+    
+    if os.path.exists(POSTS_DIR):
+        shutil.rmtree(POSTS_DIR)
+    
     os.makedirs(POSTS_DIR)
-    os.makedirs(THUMBNAIL_DIR)
+    os.makedirs(THUMBNAIL_DIR, exist_ok=True)
     shutil.copytree("static", STATIC_DIR, dirs_exist_ok=True)
 
     # 2. Fetch data from MongoDB

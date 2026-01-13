@@ -166,7 +166,7 @@ async def process_url(post_url):
 
         from telegram import Bot
         from telegram.request import HTTPXRequest
-        request = HTTPXRequest(connect_timeout=10, read_timeout=20)
+        request = HTTPXRequest(connect_timeout=30, read_timeout=60)
         bot = Bot(token=BOT_TOKEN, request=request)
         async with bot:
             status_msg = await bot.send_message(

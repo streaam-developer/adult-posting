@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>http://127.0.0.1:8000</loc>
+        <lastmod>2026-01-13T09:35:01.508046</lastmod>
+        <priority>1.00</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965fe2749718232a0cf4f53.html</loc>
+        <lastmod>2025-11-16T00:01:00+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/69660f105f92609957ad8eb6.html</loc>
+        <lastmod>2025-10-03T12:01:00+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/696610ab5f92609957ad8eb8.html</loc>
+        <lastmod>2025-08-18T21:23:11+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/69660e4fdc4a7f147eabb042.html</loc>
+        <lastmod>2025-05-02T08:30:00+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965f8ea3227fe2d43d0f548.html</loc>
+        <lastmod>2024-09-05T13:19:50+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965db557ca592b48002bf13.html</loc>
+        <lastmod>2024-08-13T10:41:08+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/69660ad5a79f500547d2819b.html</loc>
+        <lastmod>2023-11-18T08:40:53+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965fc24c085efa94b78c696.html</loc>
+        <lastmod>2022-09-27T10:29:32+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/696611af5f92609957ad8eba.html</loc>
+        <lastmod>2022-09-25T15:56:23+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965fa6f16d99e6dceb0a950.html</loc>
+        <lastmod>2022-09-25T05:39:28+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965f66d54e0b51db1e7df22.html</loc>
+        <lastmod>2022-09-16T14:33:47+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965dab07af8068e65f106e4.html</loc>
+        <lastmod>2022-08-31T02:47:38+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+</urlset>

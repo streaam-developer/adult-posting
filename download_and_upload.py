@@ -28,12 +28,28 @@ async def main():
         await asyncio.sleep(sleep_time)
 
 if __name__ == "__main__":
-    # nest_asyncio is used to allow running asyncio loops within other loops,
-    # which can be common in interactive environments or when scripts are run in certain ways.
     nest_asyncio.apply()
 
     # Start the web server in a separate process
-    multiprocessing.Process(target=start_server, daemon=True).start()
+    server_process = multiprocessing.Process(target=start_server)
+    server_process.start()
 
-    # Run the main automated posting loop
-    asyncio.run(main())
+    async def main_loop():
+        while True:
+            print("Starting automated content processing...")
+            await automated_posting()
+            
+            print("Starting website generation...")
+            await generate_site()
+            
+            sleep_time = random.randint(POST_INTERVAL_MIN, POST_INTERVAL_MAX)
+            print(f"Waiting for {sleep_time} seconds until the next run...")
+            await asyncio.sleep(sleep_time)
+
+    try:
+        asyncio.run(main_loop())
+    except KeyboardInterrupt:
+        print("Shutting down...")
+        if server_process.is_alive():
+            server_process.terminate()
+            server_process.join()
