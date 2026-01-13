@@ -22,7 +22,24 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Unauthorized.")
 
 async def main():
-    application = Application.builder().token(BOT_TOKEN).build()
+    print("Initializing Telegram bot...")
+    print(f"BOT_TOKEN length: {len(BOT_TOKEN)}")
+
+    # Test network connectivity to Telegram API
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get("https://api.telegram.org")
+            print(f"Network test: {response.status_code}")
+    except Exception as e:
+        print(f"Network test failed: {e}")
+
+    try:
+        application = Application.builder().token(BOT_TOKEN).build()
+        print("Application built successfully.")
+    except Exception as e:
+        print(f"Failed to build application: {e}")
+        raise
 
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 

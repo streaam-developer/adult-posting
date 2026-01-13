@@ -126,15 +126,36 @@ async def process_url(post_url):
             random_emoji = random.choice(emojis)
             title += f" {random_emoji}"
             description += f" Enjoy! {random_emoji}"
+            upload_date = None
+            thumbnail_url = None
+            thumbnail_local_path = None
 
             video_url = extractor['extract_video_url'](html)
             if not video_url:
                 print("No video found.")
                 return
-
-        print(f"Found video URL: {video_url}")
-        print(f"Title: {title}")
-        print(f"Duration: {readable_duration}")
+            upload_date = extractor['extract_upload_date'](html)
+            thumbnail_url = extractor['extract_thumbnail_url'](html)
+            thumbnail_local_path = None
+            if thumbnail_url:
+                os.makedirs('thumbnails', exist_ok=True)
+                filename = thumbnail_url.split('/')[-1]
+                path = f'thumbnails/{filename}'
+                try:
+                    with scraper.get(thumbnail_url, stream=True) as r:
+                        r.raise_for_status()
+                        with open(path, 'wb') as f:
+                            for chunk in r.iter_content(1024):
+                                if chunk:
+                                    f.write(chunk)
+                    thumbnail_local_path = path
+                    print(f"Thumbnail downloaded: {path}")
+                except Exception as e:
+                    print(f"Failed to download thumbnail: {e}")
+            
+            print(f"Found video URL: {video_url}")
+            print(f"Title: {title}")
+            print(f"Duration: {readable_duration}")
 
         from telegram import Bot
         bot = Bot(token=BOT_TOKEN)
@@ -203,7 +224,15 @@ async def process_url(post_url):
                 for forward_channel in FORWARD_CHANNELS:
                     await bot.forward_message(chat_id=forward_channel, from_chat_id=CHANNEL_ID, message_id=link_msg.message_id)
                 # Mark as processed in DB
-                await collection.insert_one({'url': post_url, 'processed_at': time.time()})
+                await collection.insert_one({
+                    'url': post_url,
+                    'title': title,
+                    'description': description,
+                    'duration': duration,
+                    'upload_date': upload_date,
+                    'thumbnail_local_path': thumbnail_local_path,
+                    'processed_at': time.time()
+                })
                 # Update last post time
                 await collection.update_one({'type': 'last_post'}, {'$set': {'timestamp': time.time()}}, upsert=True)
             else:

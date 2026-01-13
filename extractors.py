@@ -25,6 +25,14 @@ def extract_video_url_viralkand(html):
     print(f"Viralkand extractor: video_url = {video_url}")
     return video_url
 
+def extract_upload_date_default(html):
+    match = re.search(r'<meta itemprop="uploadDate" content="([^"]*)"', html)
+    return match.group(1) if match else None
+
+def extract_thumbnail_url_default(html):
+    match = re.search(r'<meta itemprop="thumbnailUrl" content="([^"]*)"', html)
+    return match.group(1) if match else None
+
 SITE_EXTRACTORS = {
     'viralkand.com': {
         'extract_title': extract_title_default,
