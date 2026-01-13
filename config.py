@@ -11,11 +11,15 @@ REPLACEMENTS = {
 
 ADMIN_ID = 6924888856  # Replace with your Telegram user ID
 
+BOT_TOKEN = '8057742931:AAEawT6fGA4UG2UvPzO10nxNmFmGnrJzm-4'
+CHANNEL_ID = -1003533855257
+FILE_STORE_CHANNEL = [-1003533855257]
+
 # List of usernames for random selection
 USERNAMES = ['boltarhegabot', 'dcsdfvavbdfbot']  # Add multiple usernames here
 
 # Channels to forward the link message to
-FORWARD_CHANNELS = [-1002981998032]  # Add channel IDs here, e.g., [-1001234567890]
+FORWARD_CHANNELS = [-1003533855257]  # Add channel IDs here, e.g., [-1001234567890]
 
 # MongoDB configuration
 MONGO_URI = 'mongodb+srv://sonukumarkrbbu60:lfkTvljnt25ehTt9@cluster0.2wrbftx.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'  # Replace with your MongoDB URI
@@ -23,4 +27,4 @@ DB_NAME = 'video_bot'
 COLLECTION_NAME = 'processed_urls'
 
 # Video editing setting
-VIDEO_EDITING_ENABLED = False  # Set to False to disable video editing
+VIDEO_EDITING_ENABLED = True  # Set to False to disable video editing
