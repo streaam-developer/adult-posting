@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
         meta.className = 'post-meta';
         // Format the date from the 'processed_at' timestamp
         const date = new Date(post.processed_at * 1000);
-        meta.textContent = `Uploaded on ${date.toLocaleDateString()}`;
+        meta.textContent = `Uploaded on ${date.toLocaleString()}`;
 
 
         content.appendChild(title);

@@ -29,7 +29,7 @@ def add_floating_text(video_path, output_path):
         (
             ffmpeg
             .input(video_path)
-            .drawtext(text=text, x=x_expr, y=y_expr, fontsize=50, fontcolor='white', box=1, boxcolor='black@0.5', fontfile='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf')
+            .drawtext(text=text, x=x_expr, y=y_expr, fontsize=24, fontcolor='white', box=1, boxcolor='black@0.5')
             .output(output_path, vcodec='libx264', acodec='aac')
             .run(overwrite_output=True)
         )
