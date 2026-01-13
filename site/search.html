@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search | My Awesome Site</title>
-    <meta name="description" content="Search for content on our site.">
+    <title>Advanced Search | Adult Posting</title>
+    <meta name="description" content="Advanced search for adult content with filters.">
     <link rel="canonical" href="http://0.0.0.0:8000/search.html">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="http://0.0.0.0:8000/search.html">
-    <meta property="og:title" content="Search | My Awesome Site">
-    <meta property="og:description" content="Search for content on our site.">
+    <meta property="og:title" content="Advanced Search | Adult Posting">
+    <meta property="og:description" content="Advanced search for adult content with filters.">
     <meta property="og:image" content="http://0.0.0.0:8000/static/default-social-image.png">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:url" content="http://0.0.0.0:8000/search.html">
-    <meta property="twitter:title" content="Search | My Awesome Site">
-    <meta property="twitter:description" content="Search for content on our site.">
+    <meta property="twitter:title" content="Advanced Search | Adult Posting">
+    <meta property="twitter:description" content="Advanced search for adult content with filters.">
     <meta property="twitter:image" content="http://0.0.0.0:8000/static/default-social-image.png">
-    
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -30,18 +30,98 @@
             <h1><a href="/" style="text-decoration: none; color: inherit;">Adult Posting</a></h1>
             <nav>
                 <a href="/">Home</a>
-                <a href="/search.html">Search</a>
+                <a href="/search.html">Advanced Search</a>
+                <div class="category-nav">
+                    <span>Categories:</span>
+                    
+                    <a href="/search.html?category=Nepali">Nepali</a>
+                    
+                    <a href="/search.html?category=Indian">Indian</a>
+                    
+                    <a href="/search.html?category=Boudi">Boudi</a>
+                    
+                    <a href="/search.html?category=Housewife">Housewife</a>
+                    
+                    <a href="/search.html?category=Couple">Couple</a>
+                    
+                    <a href="/search.html?category=Public">Public</a>
+                    
+                    <a href="/search.html?category=Leaked">Leaked</a>
+                    
+                    <a href="/search.html?category=Masturbation">Masturbation</a>
+                    
+                    <a href="/search.html?category=Outdoor">Outdoor</a>
+                    
+                    <a href="/search.html?category=Amateur">Amateur</a>
+                    
+                    <a href="/search.html?category=Hardcore">Hardcore</a>
+                    
+                    <a href="/search.html?category=Compilation">Compilation</a>
+                    
+                    <a href="/search.html?category=Anal">Anal</a>
+                    
+                    <a href="/search.html?category=Blowjob">Blowjob</a>
+                    
+                    <a href="/search.html?category=Teen">Teen</a>
+                    
+                    <a href="/search.html?category=Mature">Mature</a>
+                    
+                </div>
             </nav>
         </header>
         <main>
             
-<h2>Search Posts</h2>
-<input type="search" id="search-input" placeholder="Type to search..." style="width: 100%; padding: 12px; font-size: 1rem; margin-bottom: 1rem;">
-<div id="search-results"></div>
+<h2>Advanced Search</h2>
+<div class="search-filters">
+    <input type="search" id="search-input" placeholder="Search by title or description..." style="width: 100%; padding: 12px; font-size: 1rem; margin-bottom: 1rem;">
+    <select id="category-select">
+        <option value="">All Categories</option>
+        
+        <option value="Nepali">Nepali</option>
+        
+        <option value="Indian">Indian</option>
+        
+        <option value="Boudi">Boudi</option>
+        
+        <option value="Housewife">Housewife</option>
+        
+        <option value="Couple">Couple</option>
+        
+        <option value="Public">Public</option>
+        
+        <option value="Leaked">Leaked</option>
+        
+        <option value="Masturbation">Masturbation</option>
+        
+        <option value="Outdoor">Outdoor</option>
+        
+        <option value="Amateur">Amateur</option>
+        
+        <option value="Hardcore">Hardcore</option>
+        
+        <option value="Compilation">Compilation</option>
+        
+        <option value="Anal">Anal</option>
+        
+        <option value="Blowjob">Blowjob</option>
+        
+        <option value="Teen">Teen</option>
+        
+        <option value="Mature">Mature</option>
+        
+    </select>
+    <input type="date" id="date-from" placeholder="From date">
+    <input type="date" id="date-to" placeholder="To date">
+    <button id="search-button" class="contrast">Search</button>
+</div>
+<div id="search-results" class="post-grid"></div>
+<div id="loading" style="text-align: center; margin: 2rem 0; display: none;">
+    <p>Loading...</p>
+</div>
 
         </main>
         <footer class="site-footer">
-            <p>Generated by Gemini AI &copy; 2026</p>
+            <p>Generated by AI &copy; 2026</p>
         </footer>
     </div>
     
