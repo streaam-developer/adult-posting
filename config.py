@@ -28,7 +28,7 @@ COLLECTION_NAME = 'processed_urls'
 
 # Video editing setting
 VIDEO_EDITING_ENABLED = True  # Set to False to disable video editing
-VIDEO_ENCODING_PRESET = 'medium' # FFmpeg encoding preset (e.g., 'ultrafast', 'superfast', 'fast', 'medium', 'slow', 'slower', 'veryslow')
+VIDEO_ENCODING_PRESET = 'ultrafast' # FFmpeg encoding preset (e.g., 'ultrafast', 'superfast', 'fast', 'medium', 'slow', 'slower', 'veryslow')
 
 # Website configuration
 SITE_URL = "http://0.0.0.0:8000"  # Your website's base URL
