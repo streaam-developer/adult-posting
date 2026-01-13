@@ -13,7 +13,7 @@ ADMIN_ID = 6924888856  # Replace with your Telegram user ID
 
 BOT_TOKEN = '8057742931:AAHBalJqr2HmTEVbL5kfbStGLTswfdpPVxg'
 CHANNEL_ID = -1003533855257
-FILE_STORE_CHANNEL = [-1003533855257]
+FILE_STORE_CHANNEL = [-1003198232571]
 
 # List of usernames for random selection
 USERNAMES = ['boltarhegabot', 'dcsdfvavbdfbot']  # Add multiple usernames here
@@ -38,4 +38,4 @@ POST_INTERVAL_MIN = 60
 POST_INTERVAL_MAX = 300
 
 # Number of concurrent downloads/uploads
-CONCURRENT_TASKS = 3
+CONCURRENT_TASKS = 1
