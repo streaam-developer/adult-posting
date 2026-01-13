@@ -2,8 +2,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>http://127.0.0.1:8000</loc>
-        <lastmod>2026-01-13T08:03:29.658136</lastmod>
+        <lastmod>2026-01-13T08:11:41.394081</lastmod>
         <priority>1.00</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965fe2749718232a0cf4f53.html</loc>
+        <lastmod>2025-11-16T00:01:00+05:30</lastmod>
+        <priority>0.80</priority>
     </url>
     
     <url>
