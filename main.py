@@ -19,7 +19,7 @@ mongo_client = AsyncIOMotorClient(MONGO_URI)
 db = mongo_client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
-async def upload_with_retry(bot, file_path, title, description, duration, retries=3):
+async async def upload_with_retry(bot, file_path, title, description, duration, retries=3):
     """Upload video with retry + stats."""
     import os
     import math
