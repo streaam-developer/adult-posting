@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>http://127.0.0.1:8000</loc>
+        <lastmod>2026-01-13T07:34:50.731725</lastmod>
+        <priority>1.00</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965db557ca592b48002bf13.html</loc>
+        <lastmod>2026-01-13T11:12:45.730481</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/6965dab07af8068e65f106e4.html</loc>
+        <lastmod>2026-01-13T11:10:00.778798</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+</urlset>

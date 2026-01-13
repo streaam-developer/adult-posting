@@ -27,7 +27,7 @@ def setup_templates():
     
     # Base Template (with Search link)
     with open(os.path.join(TEMPLATE_DIR, "base.html"), "w", encoding="utf-8") as f:
-        f.write("""<!DOCTYPE html>
+        f.write('''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -71,11 +71,11 @@ def setup_templates():
     </div>
     {% block scripts %}{% endblock %}
 </body>
-</html>")
+</html>''')
 
     # Homepage Template
     with open(os.path.join(TEMPLATE_DIR, "index.html"), "w", encoding="utf-8") as f:
-        f.write("""{% extends "base.html" %}
+        f.write('''{% extends "base.html" %}
 {% block content %}
 <div class="grid">
     {% for post in posts %}
@@ -106,11 +106,11 @@ def setup_templates():
     padding: 1rem;
 }
 </style>
-{% endblock %}""")
+{% endblock %}''')
         
     # Post Detail Template
     with open(os.path.join(TEMPLATE_DIR, "post.html"), "w", encoding="utf-8") as f:
-        f.write("""{% extends "base.html" %}
+        f.write('''{% extends "base.html" %}
 {% block content %}
 <article>
     <header>
@@ -125,11 +125,11 @@ def setup_templates():
     
     <a href="{{ post.telegram_link }}" role="button" class="contrast" target="_blank" rel="noopener noreferrer">Get File</a>
 </article>
-{% endblock %}""")
+{% endblock %}''')
 
     # Search Page Template
     with open(os.path.join(TEMPLATE_DIR, "search.html"), "w", encoding="utf-8") as f:
-        f.write("""{% extends "base.html" %}
+        f.write('''{% extends "base.html" %}
 {% block content %}
 <h2>Search Posts</h2>
 <input type="search" id="search-input" placeholder="Type to search..." style="width: 100%; padding: 12px; font-size: 1rem; margin-bottom: 1rem;">
@@ -137,7 +137,7 @@ def setup_templates():
 {% endblock %}
 {% block scripts %}
 <script src="/static/search.js"></script>
-{% endblock %}""")
+{% endblock %}''')
 
 # --- Site Generation Logic ---
 
