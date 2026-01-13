@@ -12,7 +12,7 @@ REPLACEMENTS = {
 ADMIN_ID = 6924888856  # Replace with your Telegram user ID
 
 BOT_TOKEN = '8057742931:AAHBalJqr2HmTEVbL5kfbStGLTswfdpPVxg'
-CHANNEL_ID = -1003533855257
+CHANNEL_ID = -1003198232571
 FILE_STORE_CHANNEL = [-1003198232571]
 
 # List of usernames for random selection
