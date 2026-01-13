@@ -192,25 +192,7 @@ async def process_url(post_url):
                             continue
                         f.write(chunk)
                         downloaded += len(chunk)
-                        now = time.time()
-                        # Update every 2 seconds only
-                        if now - last_update >= 2:
-                            elapsed = now - start_time
-                            speed = downloaded / 1024 / 1024 / elapsed if elapsed > 0 else 0
-                            percent = (downloaded / total * 100) if total else 0
-                            try:
-                                await status_msg.edit_text(
-                                    f"⬇️ **Downloading…** {percent:.1f}%\n"
-                                    f"📥 {downloaded/(1024*1024):.2f}/{total/(1024*1024):.2f} MB\n"
-                                    f"⚡ Speed: {speed:.2f} MB/s"
-                                )
-                            except RetryAfter as e:
-                                print(f"Download progress: Flood control, sleeping for {e.retry_after}s")
-                                await asyncio.sleep(e.retry_after)
-                            except BadRequest as e:
-                                if "Message is not modified" not in str(e):
-                                    print(f"Edit error: {e}")
-                            last_update = now
+
 
             # ---------- Edit Video ----------
             if VIDEO_EDITING_ENABLED:
