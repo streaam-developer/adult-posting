@@ -204,6 +204,9 @@ async def process_url(post_url):
                                     f"📥 {downloaded/(1024*1024):.2f}/{total/(1024*1024):.2f} MB\n"
                                     f"⚡ Speed: {speed:.2f} MB/s"
                                 )
+                            except RetryAfter as e:
+                                print(f"Download progress: Flood control, sleeping for {e.retry_after}s")
+                                await asyncio.sleep(e.retry_after)
                             except BadRequest as e:
                                 if "Message is not modified" not in str(e):
                                     print(f"Edit error: {e}")
@@ -262,23 +265,26 @@ async def process_url(post_url):
 
 async def automated_posting():
     try:
-        # Read links from file
         with open('links.txt', 'r', encoding='utf-8', errors='ignore') as f:
             links = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        
         if not links:
             print("No links in links.txt")
             return
-        # Pick random link
-        post_url = random.choice(links)
-        # Fetch last post time
-        last_post_doc = await collection.find_one({'type': 'last_post'})
-        if last_post_doc:
-            last_post_time = last_post_doc['timestamp']
-            print(f"Last post time: {time.ctime(last_post_time)}")
-        else:
-            print("No previous posts found.")
-        print(f"Auto-processing: {post_url}")
-        await process_url(post_url)
+
+        # Get a sample of links to process, up to CONCURRENT_TASKS
+        num_to_process = min(len(links), CONCURRENT_TASKS)
+        links_to_process = random.sample(links, num_to_process)
+
+        if not links_to_process:
+            print("No new links to process.")
+            return
+
+        print(f"Auto-processing {len(links_to_process)} links concurrently...")
+
+        tasks = [process_url(url) for url in links_to_process]
+        await asyncio.gather(*tasks)
+
     except Exception as e:
         import traceback
         print(f"Error in automated posting: {e}")

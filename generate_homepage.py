@@ -203,7 +203,7 @@ async def generate_site():
     query = {'url': {'$exists': True}, 'title': {'$exists': True}, 'telegram_link': {'$exists': True}}
     posts_cursor = collection.find(query)
     posts = await posts_cursor.to_list(length=None)
-    posts.sort(key=lambda x: x.get('processed_at', 0), reverse=True)
+    posts.sort(key=lambda x: x.get('upload_date') or datetime.fromtimestamp(x.get('processed_at', 0)).isoformat(), reverse=True)
     
     print(f"Found {len(posts)} posts to generate.")
 
@@ -225,8 +225,23 @@ async def generate_site():
         
         absolute_thumbnail_url = f"{SITE_URL}{thumbnail_url}"
 
-        processed_at_ts = post.get('processed_at')
-        dt_object = datetime.fromtimestamp(processed_at_ts) if processed_at_ts else datetime.utcnow()
+        upload_date_str = post.get('upload_date')
+        dt_object = None
+        if upload_date_str:
+            try:
+                # Handle ISO format with 'T' separator and optional 'Z'
+                dt_object = datetime.fromisoformat(upload_date_str.replace('Z', '+00:00'))
+            except ValueError:
+                try:
+                    # Fallback for date only
+                    dt_object = datetime.strptime(upload_date_str, '%Y-%m-%d')
+                except (ValueError, TypeError):
+                    pass # Keep dt_object as None
+        
+        if dt_object is None:
+            processed_at_ts = post.get('processed_at')
+            dt_object = datetime.fromtimestamp(processed_at_ts) if processed_at_ts else datetime.utcnow()
+
         human_date = dt_object.strftime('%B %d, %Y')
         iso_date = dt_object.isoformat()
 
