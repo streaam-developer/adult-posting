@@ -28,6 +28,10 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
     file_size = os.path.getsize(file_path)
     size_mb = file_size / (1024 * 1024)
     readable_duration = parse_duration(duration)
+
+    # Use file store channel for large files to potentially bypass limits
+    upload_chat_id = FILE_STORE_CHANNEL[0] if size_mb > 50 else CHANNEL_ID
+
     msg = await bot.send_message(
         chat_id=CHANNEL_ID,
         text=f"📤 **Starting upload...**\n🎬 *{title}*\n📦 `{size_mb:.2f} MB`"
@@ -44,7 +48,7 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
 
             with open(file_path, "rb") as f:
                 video_msg = await bot.send_video(
-                    chat_id=CHANNEL_ID,
+                    chat_id=upload_chat_id,
                     video=f,
                     caption=caption,
                     read_timeout=1800,   # 30 min
