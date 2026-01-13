@@ -21,9 +21,6 @@ def add_floating_text(video_path, output_path):
         offset_x = random.uniform(0, width / 2)
         offset_y = random.uniform(0, height / 2)
 
-        # Rotation
-        rotation = random.uniform(0, 360)
-
         # Construct the ffmpeg drawtext filter
         text = 'zeb.monster'
         x_expr = f"{offset_x} + {amplitude_x}*sin({freq_x}*2*PI*t)"
@@ -32,7 +29,7 @@ def add_floating_text(video_path, output_path):
         (
             ffmpeg
             .input(video_path)
-            .drawtext(text=text, x=x_expr, y=y_expr, fontsize=50, fontcolor='white', box=1, boxcolor='black@0.5', fontfile='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', rotation=rotation)
+            .drawtext(text=text, x=x_expr, y=y_expr, fontsize=50, fontcolor='white', box=1, boxcolor='black@0.5', fontfile='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf')
             .output(output_path, vcodec='libx264', acodec='aac')
             .run(overwrite_output=True)
         )
