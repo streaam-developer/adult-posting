@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>http://127.0.0.1:8000</loc>
-        <lastmod>2026-01-13T09:35:01.508046</lastmod>
+        <lastmod>2026-01-13T09:46:35.369961</lastmod>
         <priority>1.00</priority>
     </url>
     
@@ -21,6 +21,12 @@
     <url>
         <loc>http://127.0.0.1:8000/posts/696610ab5f92609957ad8eb8.html</loc>
         <lastmod>2025-08-18T21:23:11+05:30</lastmod>
+        <priority>0.80</priority>
+    </url>
+    
+    <url>
+        <loc>http://127.0.0.1:8000/posts/69661465196ef7bea7752fc3.html</loc>
+        <lastmod>2025-08-15T18:31:09+05:30</lastmod>
         <priority>0.80</priority>
     </url>
     
