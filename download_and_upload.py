@@ -2,17 +2,15 @@ import asyncio
 import random
 import nest_asyncio
 import os
-import multiprocessing
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+import threading
+import uvicorn
 
 from main import automated_posting
 from generate_homepage import generate_site
 from config import POST_INTERVAL_MIN, POST_INTERVAL_MAX
 
-def start_server():
-    os.chdir('site')
-    server = HTTPServer(('127.0.0.1', 8000), SimpleHTTPRequestHandler)
-    server.serve_forever()
+def run_fastapi_server():
+    uvicorn.run("api:app", host="127.0.0.1", port=8000, log_level="info")
 
 async def main():
     while True:
@@ -30,26 +28,12 @@ async def main():
 if __name__ == "__main__":
     nest_asyncio.apply()
 
-    # Start the web server in a separate process
-    server_process = multiprocessing.Process(target=start_server)
-    server_process.start()
-
-    async def main_loop():
-        while True:
-            print("Starting automated content processing...")
-            await automated_posting()
-            
-            print("Starting website generation...")
-            await generate_site()
-            
-            sleep_time = random.randint(POST_INTERVAL_MIN, POST_INTERVAL_MAX)
-            print(f"Waiting for {sleep_time} seconds until the next run...")
-            await asyncio.sleep(sleep_time)
+    # Start the FastAPI server in a separate thread
+    server_thread = threading.Thread(target=run_fastapi_server)
+    server_thread.daemon = True
+    server_thread.start()
 
     try:
-        asyncio.run(main_loop())
+        asyncio.run(main())
     except KeyboardInterrupt:
         print("Shutting down...")
-        if server_process.is_alive():
-            server_process.terminate()
-            server_process.join()

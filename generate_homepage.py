@@ -160,23 +160,6 @@ def generate_sitemap(posts):
     with open(os.path.join(SITE_DIR, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write(sitemap_xml)
 
-def generate_search_index(posts):
-    search_data = []
-    for post in posts:
-        search_data.append({
-            'title': post['title'],
-            'description': post['description'],
-            'url': post['page_url']
-        })
-    with open(os.path.join(SITE_DIR, "search_index.json"), "w", encoding="utf-8") as f:
-        json.dump(search_data, f)
-
-def generate_posts_json(posts):
-    with open(os.path.join(SITE_DIR, "posts.json"), "w", encoding="utf-8") as f:
-        json.dump(posts, f)
-
-
-
 async def generate_site():
     print("Starting website generation with search features...")
     
@@ -289,13 +272,12 @@ async def generate_site():
     # 7. Generate supporting files
     generate_robots_txt()
     generate_sitemap(processed_posts)
-    generate_search_index(processed_posts)
-    generate_posts_json(processed_posts)
 
     # 8. Cleanup template directory
     shutil.rmtree(TEMPLATE_DIR)
 
     print("Website generation complete with search features!")
+
 
 if __name__ == '__main__':
     try:

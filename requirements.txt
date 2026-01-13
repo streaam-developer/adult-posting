@@ -5,3 +5,5 @@ motor
 ffmpeg-python
 requests
 Jinja2
+fastapi
+uvicorn

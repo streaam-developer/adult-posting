@@ -1,21 +1,36 @@
 document.addEventListener('DOMContentLoaded', function () {
     const postGrid = document.getElementById('post-grid-container');
     const loadingIndicator = document.getElementById('loading');
-    let posts = [];
     let page = 1;
     const postsPerPage = 12;
+    let isLoading = false;
 
     async function fetchPosts() {
+        if (isLoading) return;
+        isLoading = true;
+        loadingIndicator.style.display = 'block';
         try {
-            const response = await fetch('/posts.json');
+            const response = await fetch(`/api/posts?page=${page}&page_size=${postsPerPage}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            posts = await response.json();
-            loadMorePosts();
+            const newPosts = await response.json();
+            if (newPosts.length > 0) {
+                newPosts.forEach(post => {
+                    const postCard = createPostCard(post);
+                    postGrid.appendChild(postCard);
+                });
+                page++;
+            } else {
+                // No more posts to load
+                window.removeEventListener('scroll', handleScroll);
+            }
         } catch (error) {
             console.error('Error fetching posts:', error);
             postGrid.innerHTML = '<p>Error loading posts. Please try again later.</p>';
+        } finally {
+            isLoading = false;
+            loadingIndicator.style.display = 'none';
         }
     }
 
@@ -24,10 +39,10 @@ document.addEventListener('DOMContentLoaded', function () {
         article.className = 'post-card';
 
         const link = document.createElement('a');
-        link.href = post.page_url;
+        link.href = post.telegram_link; // Use telegram_link from API
 
         const thumbnail = document.createElement('img');
-        thumbnail.src = post.thumbnail_url;
+        thumbnail.src = post.thumbnail_local_path; // Use thumbnail_local_path from API
         thumbnail.alt = post.title;
         thumbnail.className = 'post-thumbnail';
         thumbnail.loading = 'lazy';
@@ -41,7 +56,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const meta = document.createElement('p');
         meta.className = 'post-meta';
-        meta.textContent = `Uploaded on ${post.human_date}`;
+        // Format the date from the 'processed_at' timestamp
+        const date = new Date(post.processed_at * 1000);
+        meta.textContent = `Uploaded on ${date.toLocaleDateString()}`;
+
 
         content.appendChild(title);
         content.appendChild(meta);
@@ -52,28 +70,9 @@ document.addEventListener('DOMContentLoaded', function () {
         return article;
     }
 
-    function loadMorePosts() {
-        loadingIndicator.style.display = 'block';
-        const start = (page - 1) * postsPerPage;
-        const end = start + postsPerPage;
-        const postsToLoad = posts.slice(start, end);
-
-        postsToLoad.forEach(post => {
-            const postCard = createPostCard(post);
-            postGrid.appendChild(postCard);
-        });
-
-        page++;
-        loadingIndicator.style.display = 'none';
-
-        if (end >= posts.length) {
-            window.removeEventListener('scroll', handleScroll);
-        }
-    }
-
     function handleScroll() {
         if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500) {
-            loadMorePosts();
+            fetchPosts();
         }
     }
 
