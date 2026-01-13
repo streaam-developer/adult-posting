@@ -89,6 +89,12 @@ async def process_url(post_url):
             duration = "00:00:00"  # Default duration
             readable_duration = "00:00:00"
             modified = False
+            # Add random metadata edits
+            import random
+            emojis = ['🔥', '💥', '⭐', '🌟', '🎉', '😍', '👍', '❤️']
+            random_emoji = random.choice(emojis)
+            title += f" {random_emoji}"
+            description += f" Enjoy! {random_emoji}"
         else:
             print(f"Fetching page content from {post_url}")
             scraper = cloudscraper.create_scraper()
@@ -109,6 +115,13 @@ async def process_url(post_url):
             title, title_modified = apply_replacements(title, REPLACEMENTS)
             description, desc_modified = apply_replacements(description, REPLACEMENTS)
             modified = title_modified or desc_modified
+
+            # Add random metadata edits
+            import random
+            emojis = ['🔥', '💥', '⭐', '🌟', '🎉', '😍', '👍', '❤️']
+            random_emoji = random.choice(emojis)
+            title += f" {random_emoji}"
+            description += f" Enjoy! {random_emoji}"
 
             video_url = extractor['extract_video_url'](html)
             if not video_url:

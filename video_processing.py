@@ -13,22 +13,26 @@ def add_floating_text(video_path, output_path):
         width = int(video_stream['width'])
         height = int(video_stream['height'])
 
-        # Random position within video dimensions
-        # Assuming text width ~ 200px, height ~ 50px for fontsize 50
-        text_width = 200
-        text_height = 50
-        x = random.randint(0, max(0, width - text_width))
-        y = random.randint(0, max(0, height - text_height))
+        # Random movement across the video
+        amplitude_x = random.uniform(width / 8, width / 2)
+        amplitude_y = random.uniform(height / 8, height / 2)
+        freq_x = random.uniform(0.05, 0.2)
+        freq_y = random.uniform(0.05, 0.2)
+        offset_x = random.uniform(0, width / 2)
+        offset_y = random.uniform(0, height / 2)
+
+        # Rotation
+        rotation = random.uniform(0, 360)
 
         # Construct the ffmpeg drawtext filter
         text = 'zeb.monster'
-        x_expr = str(x)
-        y_expr = str(y)
+        x_expr = f"{offset_x} + {amplitude_x}*sin({freq_x}*2*PI*t)"
+        y_expr = f"{offset_y} + {amplitude_y}*cos({freq_y}*2*PI*t)"
 
         (
             ffmpeg
             .input(video_path)
-            .drawtext(text=text, x=x_expr, y=y_expr, fontsize=50, fontcolor='white', box=1, boxcolor='black@0.5', fontfile='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf')
+            .drawtext(text=text, x=x_expr, y=y_expr, fontsize=50, fontcolor='white', box=1, boxcolor='black@0.5', fontfile='/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', rotation=rotation)
             .output(output_path, vcodec='libx264', acodec='aac')
             .run(overwrite_output=True)
         )
