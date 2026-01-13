@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const html = results.map(post => `
             <div class="search-result-item" style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #eee;">
-                <h3><a href="${post.telegram_link}">${post.title}</a></h3>
+                <h3><a href="${post.page_url}">${post.title}</a></h3>
                 <p>${post.description.substring(0, 150)}...</p>
             </div>
         `).join('');

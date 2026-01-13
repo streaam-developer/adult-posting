@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
         article.className = 'post-card';
 
         const link = document.createElement('a');
-        link.href = post.telegram_link; // Use telegram_link from API
+        link.href = post.page_url; // Use page_url from API
 
         const thumbnail = document.createElement('img');
         thumbnail.src = post.thumbnail_local_path; // Use thumbnail_local_path from API

@@ -24,6 +24,7 @@ async def get_posts(page: int = 1, page_size: int = 10):
     # Convert ObjectId to string for JSON serialization
     for post in posts:
         post['_id'] = str(post['_id'])
+        post['page_url'] = f"/posts/{post['_id']}.html"
         
     return posts
 
@@ -35,6 +36,7 @@ async def search_posts(query: str):
     # Convert ObjectId to string for JSON serialization
     for post in posts:
         post['_id'] = str(post['_id'])
+        post['page_url'] = f"/posts/{post['_id']}.html"
         
     return posts
 
