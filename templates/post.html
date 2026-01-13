@@ -13,4 +13,23 @@
     
     <a href="{{ post.telegram_link }}" role="button" class="contrast" target="_blank" rel="noopener noreferrer">Get File</a>
 </article>
+
+{% if suggested_posts %}
+<section class="suggested-posts">
+    <h2>You might also like:</h2>
+    <div class="post-grid">
+        {% for s_post in suggested_posts %}
+        <div class="post-card">
+            <a href="{{ s_post.page_url }}">
+                <img src="{{ s_post.thumbnail_url }}" alt="Thumbnail for {{ s_post.title }}" loading="lazy">
+            </a>
+            <div class="post-info">
+                <h3><a href="{{ s_post.page_url }}">{{ s_post.title }}</a></h3>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
 {% endblock %}

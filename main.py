@@ -26,6 +26,16 @@ async def upload_with_retry(bot, file_path, title, description, duration, retrie
     import time
     from telegram import Bot
 
+def infer_category(title, description):
+    """Infers a category based on keywords in title and description."""
+    text = (title + " " + description).lower()
+    for category, keywords in CATEGORY_KEYWORDS.items():
+        if any(keyword in text for keyword in keywords):
+            return category
+    return "Uncategorized"
+
+
+
     file_size = os.path.getsize(file_path)
     size_mb = file_size / (1024 * 1024)
     readable_duration = parse_duration(duration)
@@ -100,6 +110,7 @@ async def process_url(post_url):
             random_emoji = random.choice(emojis)
             title += f" {random_emoji}"
             description += f" Enjoy! {random_emoji}"
+            category = infer_category(title, description) # Infer category for direct video
         else:
             print(f"Fetching page content from {post_url}")
             scraper = cloudscraper.create_scraper()
@@ -130,6 +141,7 @@ async def process_url(post_url):
             random_emoji = random.choice(emojis)
             title += f" {random_emoji}"
             description += f" Enjoy! {random_emoji}"
+            category = infer_category(title, description) # Infer category
             upload_date = None
             thumbnail_url = None
             thumbnail_local_path = None
@@ -234,7 +246,8 @@ async def process_url(post_url):
                     'upload_date': upload_date,
                     'thumbnail_local_path': thumbnail_local_path,
                     'telegram_link': link,
-                    'processed_at': time.time()
+                    'processed_at': time.time(),
+                    'category': category # Add category
                 })
                 # Update last post time
                 await collection.update_one({'type': 'last_post'}, {'$set': {'timestamp': time.time()}}, upsert=True)

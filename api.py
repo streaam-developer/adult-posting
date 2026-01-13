@@ -29,15 +29,25 @@ async def get_posts(page: int = 1, page_size: int = 10):
     return posts
 
 @app.get("/api/search")
-async def search_posts(query: str):
-    cursor = collection.find({"$text": {"$search": query}})
-    posts = await cursor.to_list(length=None)
+async def search_posts(query: str = "", category: str = "", page: int = 1, page_size: int = 10):
+    find_query = {}
+    if query:
+        find_query["$text"] = {"$search": query}
+    if category:
+        find_query["category"] = category
+
+    skip = (page - 1) * page_size
+    cursor = collection.find(find_query).skip(skip).limit(page_size).sort("processed_at", pymongo.DESCENDING)
+    posts = await cursor.to_list(length=page_size)
     
     # Convert ObjectId to string for JSON serialization
     for post in posts:
         post['_id'] = str(post['_id'])
         post['page_url'] = f"/posts/{post['_id']}.html"
+
+    total_results = await collection.count_documents(find_query)
         
-    return posts
+    return {"posts": posts, "total_results": total_results}
 
 app.mount("/", StaticFiles(directory="site", html=True), name="site")
+

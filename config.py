@@ -28,11 +28,36 @@ COLLECTION_NAME = 'processed_urls'
 
 # Video editing setting
 VIDEO_EDITING_ENABLED = True  # Set to False to disable video editing
-VIDEO_ENCODING_PRESET = 'ultrafast' # FFmpeg encoding preset (e.g., 'ultrafast', 'superfast', 'fast', 'medium', 'slow', 'slower', 'veryslow')
+VIDEO_ENCODING_PRESET = 'medium' # FFmpeg encoding preset (e.g., 'ultrafast', 'superfast', 'fast', 'medium', 'slow', 'slower', 'veryslow')
+
+# --- Category Configuration ---
+CATEGORIES = [
+    "Nepali", "Indian", "Boudi", "Housewife", "Couple", "Public", "Leaked", "Masturbation",
+    "Outdoor", "Amateur", "Hardcore", "Compilation", "Anal", "Blowjob", "Teen", "Mature"
+]
+
+CATEGORY_KEYWORDS = {
+    "Nepali": ["nepali", "nepal"],
+    "Indian": ["indian", "desi"],
+    "Boudi": ["boudi", "bhabi"],
+    "Housewife": ["housewife", "aunty"],
+    "Couple": ["couple", "bfgf", "husbandwife"],
+    "Public": ["public", "outdoor"],
+    "Leaked": ["leaked", "mms"],
+    "Masturbation": ["masturbation", "solo"],
+    "Outdoor": ["outdoor", "garden", "beach"],
+    "Amateur": ["amateur", "homemade"],
+    "Hardcore": ["hardcore", "extreme"],
+    "Compilation": ["compilation", "mix"],
+    "Anal": ["anal", "butt"],
+    "Blowjob": ["blowjob", "bj"],
+    "Teen": ["teen", "young"],
+    "Mature": ["mature", "milf", "aunty"]
+}
 
 # Website configuration
 SITE_URL = "http://0.0.0.0:8000"  # Your website's base URL
-POSTS_PER_PAGE = 12
+POSTS_PER_PAGE = 30
 
 # Interval for automated posting (in seconds)
 POST_INTERVAL_MIN = 30

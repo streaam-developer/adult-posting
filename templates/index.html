@@ -1,12 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
-<div id="post-grid-container" class="post-grid">
-    <!-- Posts will be loaded here by JavaScript -->
+<div class="post-grid">
+    {% for post in posts %}
+    <div class="post-card">
+        <a href="{{ post.page_url }}">
+            <img src="{{ post.thumbnail_url }}" alt="Thumbnail for {{ post.title }}" loading="lazy">
+        </a>
+        <div class="post-info">
+            <h3><a href="{{ post.page_url }}">{{ post.title }}</a></h3>
+            <p><small>{{ post.human_date }}</small></p>
+        </div>
+    </div>
+    {% else %}
+    <p>No posts found.</p>
+    {% endfor %}
 </div>
-<div id="loading" style="text-align: center; margin: 2rem 0; display: none;">
-    <p>Loading more posts...</p>
-</div>
-{% endblock %}
-{% block scripts %}
-<script src="/static/app.js"></script>
+
+{% if pagination.total_pages > 1 %}
+<nav class="pagination" aria-label="Pagination">
+  <ul>
+    {% if pagination.has_prev %}
+    <li><a href="{{ pagination.prev_page_url }}" role="button">Previous</a></li>
+    {% else %}
+    <li><button role="button" disabled>Previous</button></li>
+    {% endif %}
+
+    {% for p in pagination.page_urls %}
+      {% if p.is_current %}
+      <li><button role="button" aria-current="page">{{ p.number }}</button></li>
+      {% else %}
+      <li><a href="{{ p.url }}" role="button">{{ p.number }}</a></li>
+      {% endif %}
+    {% endfor %}
+
+    {% if pagination.has_next %}
+    <li><a href="{{ pagination.next_page_url }}" role="button">Next</a></li>
+    {% else %}
+    <li><button role="button" disabled>Next</button></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+
 {% endblock %}

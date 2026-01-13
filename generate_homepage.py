@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from jinja2 import Environment, FileSystemLoader
 
 # Import SITE_URL from config
-from config import MONGO_URI, DB_NAME, COLLECTION_NAME, SITE_URL
+from config import MONGO_URI, DB_NAME, COLLECTION_NAME, SITE_URL, POSTS_PER_PAGE, CATEGORIES
 
 # --- Configuration ---
 SITE_DIR = "site"
@@ -179,7 +179,9 @@ async def generate_site():
     
     os.makedirs(POSTS_DIR)
     os.makedirs(THUMBNAIL_DIR, exist_ok=True)
-    shutil.copytree("static", STATIC_DIR, dirs_exist_ok=True)
+    # Copy only necessary static files
+    shutil.copy(os.path.join("static", "style.css"), STATIC_DIR)
+    shutil.copy(os.path.join("static", "search.js"), STATIC_DIR)
 
     # 2. Fetch data from MongoDB
     client = AsyncIOMotorClient(MONGO_URI)
@@ -282,6 +284,34 @@ async def generate_site():
         }
         processed_posts.append(processed_post_data)
 
+        # Get 20 random posts for suggestion (excluding the current post)
+        other_posts = [p for p in posts if str(p['_id']) != post_id]
+        random.shuffle(other_posts)
+        suggested_posts = other_posts[:20]
+
+        # Format suggested posts for the template
+        suggested_posts_data = []
+        for s_post in suggested_posts:
+            s_post_id = str(s_post['_id'])
+            s_page_url = f"/posts/{s_post_id}.html"
+            
+            s_thumbnail_url = "/static/placeholder.png"
+            s_original_thumb_path = s_post.get('thumbnail_local_path')
+            if s_original_thumb_path and os.path.exists(s_original_thumb_path):
+                try:
+                    s_thumb_filename = os.path.basename(s_original_thumb_path)
+                    s_dest_thumb_path = os.path.join(THUMBNAIL_DIR, s_thumb_filename)
+                    shutil.copy(s_original_thumb_path, s_dest_thumb_path) # Ensure thumbnail is copied
+                    s_thumbnail_url = f"/thumbnails/{s_thumb_filename}"
+                except FileNotFoundError:
+                    print(f"Warning: Thumbnail not found for suggested post {s_post_id} at {s_original_thumb_path}")
+            
+            suggested_posts_data.append({
+                'title': s_post.get('title', 'No Title'),
+                'page_url': s_page_url,
+                'thumbnail_url': s_thumbnail_url
+            })
+
         seo_data = {
             'title': f"{processed_post_data['title']} | My Awesome Site",
             'description': processed_post_data['description'][:160],
@@ -291,20 +321,59 @@ async def generate_site():
         post_html = post_template.render(
             seo=seo_data,
             post=processed_post_data,
-            now=datetime.now(timezone.utc)
+            now=datetime.now(timezone.utc),
+            suggested_posts=suggested_posts_data # Pass suggested posts
         )
         with open(os.path.join(POSTS_DIR, f"{post_id}.html"), "w", encoding="utf-8") as f:
             f.write(post_html)
 
-    # 5. Generate homepage
-    homepage_seo = {'title': "Homepage | My Awesome Site", 'description': "The best place to find awesome content.", 'canonical_url': SITE_URL, 'image_url': f"{SITE_URL}/static/default-social-image.png"}
-    index_html = index_template.render(seo=homepage_seo, now=datetime.now(timezone.utc))
-    with open(os.path.join(SITE_DIR, "index.html"), "w", encoding="utf-8") as f:
-        f.write(index_html)
+    # 5. Generate paginated homepages
+    total_posts = len(posts)
+    total_pages = (total_posts + POSTS_PER_PAGE - 1) // POSTS_PER_PAGE
+
+    for page_num in range(1, total_pages + 1):
+        start_index = (page_num - 1) * POSTS_PER_PAGE
+        end_index = start_index + POSTS_PER_PAGE
+        current_page_posts = posts[start_index:end_index]
+
+        # Prepare pagination context
+        pagination = {
+            'current_page': page_num,
+            'total_pages': total_pages,
+            'has_prev': page_num > 1,
+            'has_next': page_num < total_pages,
+            'prev_page_url': f"/{'index' if page_num - 1 == 1 else f'page{page_num - 1}'}.html" if page_num > 1 else None,
+            'next_page_url': f"/page{page_num + 1}.html" if page_num < total_pages else None,
+            'page_urls': [{
+                'number': p,
+                'url': f"/{'index' if p == 1 else f'page{p}'}.html",
+                'is_current': p == page_num
+            } for p in range(1, total_pages + 1)]
+        }
+
+        # SEO for the current page
+        homepage_seo = {
+            'title': f"Homepage {'- Page ' + str(page_num) if page_num > 1 else ''} | My Awesome Site",
+            'description': "The best place to find awesome content.",
+            'canonical_url': f"{SITE_URL}/{'index' if page_num == 1 else f'page{page_num}'}.html",
+            'image_url': f"{SITE_URL}/static/default-social-image.png"
+        }
+        
+        output_filename = "index.html" if page_num == 1 else f"page{page_num}.html"
+        output_path = os.path.join(SITE_DIR, output_filename)
+
+        page_html = index_template.render(
+            seo=homepage_seo,
+            now=datetime.now(timezone.utc),
+            posts=current_page_posts,
+            pagination=pagination
+        )
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(page_html)
 
     # 6. Generate Search page
     search_seo = {'title': "Search | My Awesome Site", 'description': "Search for content on our site.", 'canonical_url': f"{SITE_URL}/search.html", 'image_url': f"{SITE_URL}/static/default-social-image.png"}
-    search_html = search_template.render(seo=search_seo, now=datetime.now(timezone.utc))
+    search_html = search_template.render(seo=search_seo, now=datetime.now(timezone.utc), categories=CATEGORIES)
     with open(os.path.join(SITE_DIR, "search.html"), "w", encoding="utf-8") as f:
         f.write(search_html)
 
