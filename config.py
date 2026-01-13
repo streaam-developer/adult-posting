@@ -28,3 +28,7 @@ COLLECTION_NAME = 'processed_urls'
 
 # Video editing setting
 VIDEO_EDITING_ENABLED = True  # Set to False to disable video editing
+
+# Website configuration
+SITE_URL = "http://127.0.0.1:8000"  # Your website's base URL
+POSTS_PER_PAGE = 12

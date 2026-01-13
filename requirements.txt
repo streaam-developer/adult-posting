@@ -4,3 +4,4 @@ nest-asyncio
 motor
 ffmpeg-python
 requests
+Jinja2

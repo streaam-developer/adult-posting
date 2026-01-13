@@ -39,6 +39,8 @@ SITE_EXTRACTORS = {
         'extract_description': extract_description_default,
         'extract_duration': extract_duration_default,
         'extract_video_url': extract_video_url_viralkand,
+        'extract_upload_date': extract_upload_date_default,
+        'extract_thumbnail_url': extract_thumbnail_url_default,
     },
     # Add more domains as needed
     'default': {
@@ -46,5 +48,7 @@ SITE_EXTRACTORS = {
         'extract_description': extract_description_default,
         'extract_duration': extract_duration_default,
         'extract_video_url': extract_video_url_default,
+        'extract_upload_date': extract_upload_date_default,
+        'extract_thumbnail_url': extract_thumbnail_url_default,
     }
 }

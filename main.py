@@ -11,6 +11,7 @@ from config import *
 from extractors import SITE_EXTRACTORS
 from utils import apply_replacements, parse_duration, sanitize_filename
 from video_processing import add_floating_text
+from generate_homepage import generate_site
 
 # MongoDB connection
 mongo_client = AsyncIOMotorClient(MONGO_URI)
@@ -104,10 +105,13 @@ async def process_url(post_url):
             scraper = cloudscraper.create_scraper()
             html = scraper.get(post_url).text
 
-            # Get domain
+            # Get domain and create a complete extractor config
             domain = urlparse(post_url).netloc
             print(f"Domain: {domain}")
-            extractor = SITE_EXTRACTORS.get(domain, SITE_EXTRACTORS['default'])
+            
+            extractor = SITE_EXTRACTORS['default'].copy()
+            if domain in SITE_EXTRACTORS:
+                extractor.update(SITE_EXTRACTORS[domain])
 
             # Extract metadata
             title = extractor['extract_title'](html)
@@ -231,10 +235,14 @@ async def process_url(post_url):
                     'duration': duration,
                     'upload_date': upload_date,
                     'thumbnail_local_path': thumbnail_local_path,
+                    'telegram_link': link,
                     'processed_at': time.time()
                 })
                 # Update last post time
                 await collection.update_one({'type': 'last_post'}, {'$set': {'timestamp': time.time()}}, upsert=True)
+                
+                # Generate the static site
+                await generate_site()
             else:
                 print("Upload failed.")
                 await status_msg.edit_text("❌ Upload failed.")
@@ -270,7 +278,7 @@ async def automated_posting():
             await process_url(post_url)
             # Sleep for 1-1.5 hours
             #sleep_time = random.randint(60, 90)
-            sleep_time = random.randint(3600, 5400)
+            sleep_time = random.randint(20, 40)
             print(f"Sleeping for {sleep_time} seconds")
             await asyncio.sleep(sleep_time)
         except Exception as e:
