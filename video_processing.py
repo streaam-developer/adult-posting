@@ -4,7 +4,7 @@ import shutil
 import ffmpeg
 
 # Video editor function
-def add_floating_text(video_path, output_path):
+def add_floating_text(video_path, output_path, preset='medium'):
     """Add floating 'zeb.monster' text to video in random places and directions."""
     try:
         # Get video dimensions
@@ -30,7 +30,7 @@ def add_floating_text(video_path, output_path):
             ffmpeg
             .input(video_path)
             .drawtext(text=text, x=x_expr, y=y_expr, fontsize=24, fontcolor='white', box=1, boxcolor='black@0.5')
-            .output(output_path, vcodec='libx264', acodec='aac')
+            .output(output_path, vcodec='libx264', acodec='aac', preset=preset)
             .run(overwrite_output=True)
         )
     except Exception as e:

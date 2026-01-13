@@ -205,7 +205,7 @@ async def process_url(post_url):
             if VIDEO_EDITING_ENABLED:
                 await status_msg.edit_text("✅ **Download complete!** Editing video…")
                 edited_filename = filename.replace('.mp4', '_edited.mp4')
-                add_floating_text(filename, edited_filename)
+                add_floating_text(filename, edited_filename, preset=VIDEO_ENCODING_PRESET)
                 await status_msg.edit_text("✅ **Video edited!** Uploading…")
                 video_to_upload = edited_filename
             else:
