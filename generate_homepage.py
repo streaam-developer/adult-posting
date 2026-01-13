@@ -194,25 +194,33 @@ async def generate_site():
     now = datetime.now(timezone.utc)
     filtered_posts = []
     for post in posts:
-        upload_date_str = post.get('upload_date')
+        upload_date = post.get('upload_date')
         dt_object = None
-        if upload_date_str:
+        if isinstance(upload_date, datetime):
+            dt_object = upload_date
+        elif isinstance(upload_date, str):
             try:
-                dt_object = datetime.fromisoformat(upload_date_str.replace('Z', '+00:00'))
+                dt_object = datetime.fromisoformat(upload_date.replace('Z', '+00:00'))
             except ValueError:
                 try:
-                    dt_object = datetime.strptime(upload_date_str, '%Y-%m-%d')
+                    dt_object = datetime.strptime(upload_date, '%Y-%m-%d')
                 except (ValueError, TypeError):
                     pass
         if dt_object is None:
             processed_at_ts = post.get('processed_at')
-            dt_object = datetime.fromtimestamp(processed_at_ts) if processed_at_ts else datetime.utcnow()
+            dt_object = datetime.fromtimestamp(processed_at_ts) if processed_at_ts else datetime.now(timezone.utc)
 
         if dt_object <= now:
             filtered_posts.append(post)
 
     posts = filtered_posts
-    posts.sort(key=lambda x: x.get('upload_date') or datetime.fromtimestamp(x.get('processed_at', 0)).isoformat(), reverse=True)
+    def get_sort_key(post):
+        upload_date = post.get('upload_date')
+        if isinstance(upload_date, datetime):
+            return upload_date
+        processed_at = post.get('processed_at', 0)
+        return datetime.fromtimestamp(processed_at)
+    posts.sort(key=get_sort_key, reverse=True)
     
     print(f"Found {len(posts)} posts to generate.")
 
@@ -234,16 +242,18 @@ async def generate_site():
         
         absolute_thumbnail_url = f"{SITE_URL}{thumbnail_url}"
 
-        upload_date_str = post.get('upload_date')
+        upload_date = post.get('upload_date')
         dt_object = None
-        if upload_date_str:
+        if isinstance(upload_date, datetime):
+            dt_object = upload_date
+        elif isinstance(upload_date, str):
             try:
                 # Handle ISO format with 'T' separator and optional 'Z'
-                dt_object = datetime.fromisoformat(upload_date_str.replace('Z', '+00:00'))
+                dt_object = datetime.fromisoformat(upload_date.replace('Z', '+00:00'))
             except ValueError:
                 try:
                     # Fallback for date only
-                    dt_object = datetime.strptime(upload_date_str, '%Y-%m-%d')
+                    dt_object = datetime.strptime(upload_date, '%Y-%m-%d')
                 except (ValueError, TypeError):
                     pass # Keep dt_object as None
         
